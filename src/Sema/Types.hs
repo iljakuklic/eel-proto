@@ -1,34 +1,36 @@
 
 module Sema.Types(
     -- * Data structures
-    TRow(..), Type(..), Signature (..),
+    Type(..), Type2(..),
     -- * Helper functions
     tUnit, tChar, tNum, tReal, tBool, tString, tMaybe
   ) where
 
 import Sema.Common
 
--- | Row types.
-data TRow v = RCons (TRow v) (Type v) -- ^ constructed row
-            | RVar v                  -- ^ row variable
-            | RNil                    -- ^ empty row
-            deriving Eq
-
 -- | Type specification representation.
-data Type v = TUnit                    -- ^ unit type
-            | TAtom Symbol             -- ^ atomic type
-            | TSum  (Type v) (Type v)  -- ^ sum type (tagged disjoint union)
-            | TProd (Type v) (Type v)  -- ^ product type
-            | TList (Type v)           -- ^ list type
-            | TFunc (Signature v)      -- ^ function type
-            | TVar  v                  -- ^ type variable
+data Type v = TAtom Symbol                  -- ^ atomic type
+            | TVar  v                       -- ^ type variable
+            | TBin Type2 (Type v) (Type v)  -- ^ binary type
+            | TList (Type v)                -- ^ list type
             deriving Eq
 
--- | Function type.
-data Signature v = Signature (TRow v) (TRow v) deriving Eq
+-- | Compound type variants (sum, product, function)
+data Type2 = TSum | TProd | TFunc deriving Eq
+
+-- functor
+instance Functor Type where
+    fmap f (TVar v) = TVar (f v)
+    fmap f (TList t) = TList (fmap f t)
+    fmap f (TBin c a b) = TBin c (fmap f a) (fmap f b)
+    fmap f (TAtom n) = TAtom n
 
 -- | Create atom type
 tAtom name = TAtom (Symbol name)
+
+tSum  = TBin TSum
+tProd = TBin TProd
+tFunc = TBin TFunc
 
 -- | Unit type shortcut.
 tUnit :: Type v
@@ -48,7 +50,7 @@ tChar = tAtom "char"
 
 -- | Maybe type shortcut
 tMaybe :: Type v -> Type v
-tMaybe t = TSum tUnit t
+tMaybe t = tSum tUnit t
 
 -- | Boolean type shortcut.
 tBool :: Type v
@@ -61,26 +63,24 @@ tString = TList tChar
 
 -- show instances
 instance (Eq v, Show v) => Show (Type v) where
+  show = show' False
+   where
     -- "syntax sugar" aliases
-    show t          | t == tString = "string"       -- string  == [char]
-    show t          | t == tBool   = "bool"         -- boolean == (unit | unit)
-    show (TSum u b) | u == tUnit   = show b ++ "?"  -- maybe b == (unit | b)
+    show' p t               | t == tString = "string"           -- string  == [char]
+    show' p t               | t == tBool   = "bool"             -- boolean == (unit | unit)
+    show' p (TBin TSum u b) | u == tUnit = show' True b ++ "?"  -- maybe b == (unit | b)
     -- non-sugared rendering
-    show (TAtom s)   = show s
-    show (TSum a b)  = binaryS a b " | "
-    show (TProd a b) = binaryS a b ", "
-    show (TList a)   = "[" ++ show a ++ "]"
-    show (TFunc f)   = show f
-    show (TVar v)    = '+' : show v
+    show' p (TAtom s)    = show s
+    show' p (TList a)    = "[" ++ show' True a ++ "]"
+    show' p (TVar v)     = '%' : show v
+    show' p (TBin c a b) = parF $ show' pl a ++ t_op c ++ show' pr b
+      where
+        parF = case (p, c) of (False, TProd) -> id; _ -> parens
+        p' TFunc = (False, False)
+        p' TProd = (p, True)
+        p' TSum  = (True, True)
+        (pl, pr) = p' c
+        parens str = "(" ++ str ++ ")"
+        t_op c = case c of TSum -> " | "; TProd -> ", "; TFunc -> " -> "
 
-instance (Eq v, Show v) => Show (Signature v) where
-    show (Signature rin rout) = parensS $ show rin ++ " -> " ++ show rout
-
-instance (Eq v, Show v) => Show (TRow v) where
-    show RNil = ""
-    show (RVar v) = '#' : show v
-    show (RCons r t) = show r ++ (case r of RNil -> ""; _ -> " . ") ++ show t
-
-binaryS a b op = parensS $ show a ++ op ++ show b
-parensS str = "(" ++ str ++ ")"
 

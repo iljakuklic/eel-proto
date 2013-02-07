@@ -10,12 +10,12 @@ infix 5 |+
 infixl 4 %
 infix 3 ~>
 
-r % t = RCons r t
-r1 ~> r2 = TFunc (Signature r1 r2)
-t1 |* t2  = TProd t1 t2
-t1 |+ t2  = TSum t1 t2
+r % t = TBin TProd r t
+r1 ~> r2 = TBin TFunc r1 r2
+t1 |* t2  = TBin TProd t1 t2
+t1 |+ t2  = TBin TSum t1 t2
 
-rv x = RVar $ Symbol x
+rv x = TVar $ Symbol x
 tv x = TVar $ Symbol x
 
 tA = rv "A"
@@ -45,6 +45,8 @@ t_2b t   = tA % t % t ~> tA % tBool
 t_listNode t = tMaybe (t |* TList t)
 
 tt = [
+    -- BUILTINS
+
     --conbinators
     ("fix", tA % (tA % (tA ~> tB) ~> tB) ~> tB),
     ("dip", tA % tb % (tA ~> tC) ~> tC % tb),
@@ -52,6 +54,7 @@ tt = [
     ("cat", tA % (tB ~> tC) % (tC ~> tD) ~> tA % (tB ~> tD)),
     ("dup", tA % tb ~> tA % tb % tb),
     ("zap", tA % tb ~> tA),
+    ("id2", tA % tb % tb ~> tA % tb % tb),
 
     -- product
     ("pair"  , tA % tb %  tc ~> tA % tb |* tc),
@@ -68,10 +71,12 @@ tt = [
 
     -- unit
     ("unit",   t_01 tUnit),
-    ("ununit", tA % tUnit ~> tA),
+
+
+    -- EXTERNAL
 
     -- numbers
-    ("n0" , t_01 tNum ),
+    ("n0" , t_01 tNum),
     ("n1" , t_01 tNum),
     ("add", t_21 tNum),
     ("sub", t_21 tNum),
@@ -86,7 +91,7 @@ tt = [
     -- reals
     ("floor", t_ab tReal tNum),
     ("real" , t_ab tNum tReal),
-    ("f0"  , t_01 tReal ),
+    ("f0"  , t_01 tReal),
     ("f1"  , t_01 tReal),
     ("fadd", t_21 tReal),
     ("fsub", t_21 tReal),
