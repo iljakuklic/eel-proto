@@ -1,4 +1,5 @@
 
+
 module Sema.Types(
     -- * Data structures
     Type(..), Type2(..),
@@ -7,6 +8,9 @@ module Sema.Types(
   ) where
 
 import Sema.Common
+import Data.Foldable
+import Data.Monoid
+import Data.List
 
 -- | Type specification representation.
 data Type v = TAtom Symbol                  -- ^ atomic type
@@ -24,6 +28,15 @@ instance Functor Type where
     fmap f (TList t) = TList (fmap f t)
     fmap f (TBin c a b) = TBin c (fmap f a) (fmap f b)
     fmap f (TAtom n) = TAtom n
+
+instance Foldable Type where
+    foldMap f (TVar v) = f v
+    foldMap f (TList t) = foldMap f t
+    foldMap f (TBin _ a b) = foldMap f a <> foldMap f b
+    foldMap f (TAtom _) = mempty
+
+-- | collect type variables
+tyVars = nub . toList
 
 -- | Create atom type
 tAtom name = TAtom (Symbol name)
