@@ -3,6 +3,7 @@ module Sema.TypesUtil where
 
 import Sema.Types
 import Sema.Common
+import Sema.Infer
 
 
 infix 6 |*
