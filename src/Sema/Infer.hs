@@ -1,5 +1,5 @@
 
-module Sema.Infer(TypeError(..), subst, unify) where
+module Sema.Infer {-(TypeError(..), subst, unify)-} where
 
 import Sema.Types
 import Sema.Common
@@ -44,31 +44,36 @@ subst sm t = subst' t
     subst' (TList x)    = TList (subst' x)
 
 -- | Type unification
-unify t1 t2 | t1 == t2 = return M.empty
+--unify :: (Ord v, MonadError (TypeError v) m) => Type v -> Type v -> m (M.Map v (Type v))
+unify u v | u == v = return M.empty
 unify (TVar v) t = if v `notElem` t
     then return (M.singleton v t)
     else throwError (TEOccurs v t)
 unify t v@(TVar _) = unify v t
-unify (TList t1) (TList t2) = unify t1 t2
-unify (TBin f1 a b) (TBin f2 c d) | f1 == f2 = do
+unify (TList u) (TList v) = unify u v
+unify (TBin u a b) (TBin v c d) | u == v = do
     s1 <- unify a c
-    s2 <- unify (subst s1 c) (subst s1 d)
-    return (M.union s1 s2)
+    s2 <- unify (subst s1 b) (subst s1 d)
+    return (M.union s2 (fmap (subst s2) s1))
 unify t1 t2 = throwError (TEUnify t1 t2)
 
 -- | rename variables in t2 that collide with variable names in t1
 unCollide t1 t2 = subst sm t2
   where
     collisions = intersect (toList t1) (toList t2)
-    availVars  = [ TVar v | v <- genTyVars, v `notElem` collisions ]
+    used       = union (toList t1) (toList t2)
+    availVars  = [ TVar v | v <- genTyVars, v `notElem` used ]
     sm         = M.fromList (zip collisions availVars)
 
-inferIdentity = TBin TFunc a a
+-- | infer type of the empty function (= identity)
+inferEmpty = TBin TFunc a a
     where a = TVar (head genTyVars)
 
+-- | infer type of a quotation of the function f
 inferQuotation f = TBin TFunc v (TBin TProd v f)
   where v = TVar (genTyVar f)
 
+-- | infer type of the function composition g'(f(x)), written f g'
 inferComposition f@(TBin TFunc a b) g' = do
     sm <- unify b c
     return (TBin TFunc (subst sm a) (subst sm d))

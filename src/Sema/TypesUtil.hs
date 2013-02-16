@@ -5,6 +5,7 @@ import Sema.Types
 import Sema.Common
 import Sema.Infer
 
+import Control.Monad.Error
 
 infix 6 |*
 infix 5 |+
@@ -109,4 +110,9 @@ tt = [
   ]
 
 ttPrint = putStr $ unlines $ map ((\(n, t) -> take 12 (n ++ repeat ' ') ++ " : " ++ show t)) tt
+
+ft n = let Just t = lookup n tt in t
+f `o` g = case runErrorT (f `inferComposition` g) of
+        Right t -> t
+        Left  e -> error "type error" --(show e)
 
