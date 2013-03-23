@@ -1,13 +1,14 @@
 
-module Parser.State where
-
-import Sema.Common
-import qualified Data.Map as M
-import Sema.Types
-import Sema.Term
-import Text.Parsec
+module Parser.State (PState(..), Meta(..), lookupFunc) where
 
 import Parser.Rule
+import Sema.Types
+import Sema.Term
+import Sema.Common
+
+import Text.Parsec
+import Control.Applicative
+import qualified Data.Map as M
 
 -- | Parser state
 data PState m = PState {
@@ -23,3 +24,9 @@ data Meta = Meta {
         mPosEnd   :: SourcePos     -- ^ end of the term in source file
     }
 
+-- | Symbol table lookup
+lookupFunc sym = do
+    st <- pSymTable <$> getState
+    case M.lookup sym st of
+        Just term -> return term
+        Nothing   -> fail ("Not in scope: " ++ show sym)
