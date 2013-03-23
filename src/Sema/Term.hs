@@ -2,7 +2,7 @@
 module Sema.Term (
         Term(..), FunctionCall(..), FunctionDef(..), BuiltIn(..),
         SymTable, Stack,
-        getMeta
+        getMeta, builtInName
     ) where
 
 import qualified Data.Map as M
@@ -80,6 +80,9 @@ data BuiltIn
      | BIputchar       -- ^ write a character to stdout
      | BIreadfile      -- ^ read file contents
      | BIwritefile     -- ^ write file contents
+     -- * Compiler functions
+     | BIdef           -- ^ define a function
+     | BIlet           -- ^ let binding
      deriving (Show)
 
 -- | Symbol table
