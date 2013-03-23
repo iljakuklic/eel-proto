@@ -9,15 +9,17 @@ import Text.Parsec
 
 import Parser.Rule
 
+-- | Parser state
 data PState m = PState {
-        pSymTable :: SymTable m,
-        pStack    :: Stack,
-        pRules    :: RuleTable m
+        pSymTable :: SymTable m,  -- ^ symbol table
+        pRules    :: RuleTable m, -- ^ rule table
+        pStack    :: Stack        -- ^ evaluation stack contents
     }
 
+-- | Parsed terms metadata
 data Meta = Meta {
-        mType     :: Type Symbol,
-        mPosBegin :: SourcePos,
-        mPosEnd   :: SourcePos
+        mType     :: Type Symbol,  -- ^ inferred data type
+        mPosBegin :: SourcePos,    -- ^ beginning of the term in source file
+        mPosEnd   :: SourcePos     -- ^ end of the term in source file
     }
 
