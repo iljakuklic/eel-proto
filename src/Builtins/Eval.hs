@@ -15,7 +15,7 @@ instance Evaluable (Term m) where
 
 -- function invokation
 instance Evaluable (Function) where
-    eval (FUser fn)   = error "Lookup function and eval not implemented"
+    eval (FUser fn)   = lookupFunc fn >>= eval
     eval (FBuiltIn b) = eval b
 
 -- builtin invokation
