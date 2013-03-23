@@ -1,6 +1,6 @@
 
 module Sema.Term (
-        Term(..), Function(..), BuiltIn(..),
+        Term(..), FunctionCall(..), FunctionDef(..), BuiltIn(..),
         SymTable, Stack,
         getMeta
     ) where
@@ -12,7 +12,7 @@ import Sema.Common
 
 -- | Term Representation
 data Term m
-     = TFunc  m (Function)          -- ^ function invokation
+     = TFunc  m (FunctionCall)      -- ^ function invokation
      | TComp  m (Term m) (Term m)   -- ^ function composition
      | TQuot  m (Term m)            -- ^ anonymous function quotation
      | TInt   m Int                 -- ^ integer value
@@ -24,10 +24,15 @@ data Term m
      | TList  m [Term m]            -- ^ list of values
      | TUnit  m                     -- ^ unit type value
 
+-- | function invokation
+data FunctionCall
+     = FCUser    Symbol    -- ^ user-defined function
+     | FCBuiltIn BuiltIn   -- ^ built-in function
+
 -- | function definition
-data Function
-     = FUser    Symbol    -- user-defined function
-     | FBuiltIn BuiltIn   -- built-in function
+data FunctionDef m
+     = FDUser    (Term m)  -- ^ user-defined function
+     | FDBuiltIn BuiltIn   -- ^ built-in function
 
 -- | Built-in functions enumeration
 data BuiltIn 
@@ -78,7 +83,7 @@ data BuiltIn
      deriving (Show)
 
 -- | Symbol table
-type SymTable m = M.Map Symbol (Term m)
+type SymTable m = M.Map Symbol (FunctionDef m)
 -- | Runtime stack
 type Stack      = [Term ()]
 
@@ -94,6 +99,9 @@ getMeta (TRight m _)   = m
 getMeta (TPair  m _ _) = m
 getMeta (TList  m _)   = m
 getMeta (TUnit  m)     = m
+
+-- | get builtin name
+builtInName = tail . tail . show
 
 instance Show (Term m) where
     show (TFunc  _ f)   = show f
@@ -121,6 +129,6 @@ instance Functor Term where
     fmap f (TList  m as)  = TList  (f m) (fmap (fmap f) as)
     fmap f (TUnit  m)     = TUnit  (f m)
 
-instance Show Function where
-    show (FUser s)    = show s
-    show (FBuiltIn b) = show b
+instance Show FunctionCall where
+    show (FCUser s)    = show s
+    show (FCBuiltIn b) = show b

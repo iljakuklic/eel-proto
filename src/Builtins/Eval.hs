@@ -14,9 +14,14 @@ instance Evaluable (Term m) where
     eval q = push (fmap (const ()) q)
 
 -- function invokation
-instance Evaluable (Function) where
-    eval (FUser fn)   = lookupFunc fn >>= eval
-    eval (FBuiltIn b) = eval b
+instance Evaluable FunctionCall where
+    eval (FCBuiltIn b) = eval b
+    eval (FCUser fn)   = lookupFunc fn >>= eval
+
+-- function definition
+instance Evaluable (FunctionDef m) where
+    eval (FDBuiltIn bi) = eval bi
+    eval (FDUser  term) = eval term
 
 -- builtin invokation
 instance Evaluable BuiltIn where
