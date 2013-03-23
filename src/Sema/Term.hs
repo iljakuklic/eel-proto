@@ -24,10 +24,10 @@ data Term m
      | TList  m [Term m]            -- ^ list of values
      | TUnit  m                     -- ^ unit type value
 
--- | Functions: user-defined or builtins
+-- | function definition
 data Function m
-     = FUser    (Term m)
-     | FBuiltIn BuiltIn
+     = FUser    (Term m)  -- user-defined function
+     | FBuiltIn BuiltIn   -- built-in function
 
 -- | Built-in functions enumeration
 data BuiltIn 
