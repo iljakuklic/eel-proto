@@ -12,7 +12,7 @@ import Sema.Common
 
 -- | Term Representation
 data Term m
-     = TFunc  m (Function m)        -- ^ function invokation
+     = TFunc  m (Function)          -- ^ function invokation
      | TComp  m (Term m) (Term m)   -- ^ function composition
      | TQuot  m (Term m)            -- ^ anonymous function quotation
      | TInt   m Int                 -- ^ integer value
@@ -25,8 +25,8 @@ data Term m
      | TUnit  m                     -- ^ unit type value
 
 -- | function definition
-data Function m
-     = FUser    (Term m)  -- user-defined function
+data Function
+     = FUser    Symbol    -- user-defined function
      | FBuiltIn BuiltIn   -- built-in function
 
 -- | Built-in functions enumeration
@@ -78,7 +78,7 @@ data BuiltIn
      deriving (Show)
 
 -- | Symbol table
-type SymTable m = M.Map Symbol (Function m)
+type SymTable m = M.Map Symbol (Term m)
 -- | Runtime stack
 type Stack      = [Term ()]
 
@@ -109,7 +109,7 @@ instance Show (Term m) where
     show (TUnit  _)     = "#"
 
 instance Functor Term where
-    fmap f (TFunc  m a)   = TFunc  (f m) (fmap f a)
+    fmap f (TFunc  m a)   = TFunc  (f m) a
     fmap f (TComp  m a b) = TComp  (f m) (fmap f a) (fmap f b)
     fmap f (TQuot  m a)   = TQuot  (f m) (fmap f a)
     fmap f (TInt   m a)   = TInt   (f m) a
@@ -121,10 +121,6 @@ instance Functor Term where
     fmap f (TList  m as)  = TList  (f m) (fmap (fmap f) as)
     fmap f (TUnit  m)     = TUnit  (f m)
 
-instance Show (Function m) where
+instance Show Function where
     show (FUser s)    = show s
     show (FBuiltIn b) = show b
-
-instance Functor Function where
-    fmap f (FUser fun)  = FUser (fmap f fun)
-    fmap f (FBuiltIn b) = FBuiltIn b

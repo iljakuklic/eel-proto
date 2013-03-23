@@ -14,8 +14,8 @@ instance Evaluable (Term m) where
     eval q = push (fmap (const ()) q)
 
 -- function invokation
-instance Evaluable (Function m) where
-    eval (FUser term) = eval term
+instance Evaluable (Function) where
+    eval (FUser fn)   = error "Lookup function and eval not implemented"
     eval (FBuiltIn b) = eval b
 
 -- builtin invokation
@@ -23,7 +23,7 @@ instance Evaluable BuiltIn where
     eval BIfix = error "Fixpoint evaluation not implemented"
     eval BIdip = do f <- pop; x <- pop; eval f; push x
     eval BIsel = do
-        f1 <- pop; f0 <- pop; x <- pop
+        f0 <- pop; f1 <- pop; x <- pop
         case x of
             (TLeft  _ x') -> do push x'; eval f0
             (TRight _ x') -> do push x'; eval f1
