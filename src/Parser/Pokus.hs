@@ -3,8 +3,9 @@ import Builtins.Eval
 import Sema.Term
 import Parser.State
 import Sema.Common
-import Data.Char
+import Builtins.Builtins
 
+import Data.Char
 import Text.Parsec hiding (many, (<|>))
 import Control.Applicative
 import qualified Data.Map as M

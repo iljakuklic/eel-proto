@@ -2,13 +2,14 @@
 module Sema.Term (
         Term(..), FunctionCall(..), FunctionDef(..), BuiltIn(..),
         SymTable, Stack(..),
-        getMeta, builtInName, allBuiltIns, onStack
+        getMeta, onStack
     ) where
 
 import qualified Data.Map as M
 import Data.Functor
 
 import Sema.Common
+import Builtins.Builtins
 
 -- | Term Representation
 data Term m
@@ -35,59 +36,6 @@ data FunctionDef m
      | FDBuiltIn BuiltIn   -- ^ built-in function
      deriving (Show)
 
--- | Built-in functions enumeration
-data BuiltIn 
-     -- * Combinators
-     = BIid            -- ^ identity function
-     | BIid2           -- ^ identity function with a type restriction
-     | BIzap           -- ^ pop the top of the stack
-     | BIdup           -- ^ duplicate the top of the stack
-     | BIqot           -- ^ quote the top of the stack
-     | BIdip           -- ^ dip
-     | BIcat           -- ^ quotation composition
-     | BIfix           -- ^ fixed point combinator
-     -- * Unit
-     | BIunit          -- ^ unit type
-     -- * Products
-     | BIpair          -- ^ pair constructor
-     | BIunpair        -- ^ pair deconstructor
-     -- * Sums
-     | BIlft           -- ^ left injection
-     | BIrgt           -- ^ right injection
-     | BIsel           -- ^ selection (sum deconstructor)
-     -- * Lists
-     | BIlistw         -- ^ list wrap by 1 level
-     | BIlistu         -- ^ list unwrap by 1 level
-     -- * Integers
-     | BIadd           -- ^ integer addition
-     | BIsub           -- ^ integer subtraction
-     | BImul           -- ^ integer multiplication
-     | BIdiv           -- ^ integer division
-     | BIcmp           -- ^ integer comparison
-     -- * Floats
-     | BIfadd          -- ^ floating-point addition
-     | BIfsub          -- ^ floating-point subtraction
-     | BIfmul          -- ^ floating-point multiplication
-     | BIfdiv          -- ^ floating-point division
-     | BIfcmp          -- ^ floating-point comparison
-     | BIfsin          -- ^ floating-point sine
-     | BIfpow          -- ^ floating-point power function
-     | BIflog          -- ^ floating-point natural logarithm
-     -- * Conversions
-     | BIfloor         -- ^ floating-to-integer conversion (floor)
-     | BIfloat         -- ^ integer-to-floating conversion
-     | BIord           -- ^ char-to-integer conversion
-     | BIchar          -- ^ integer-to-char conversion
-     -- * IO builtins
-     | BIgetchar       -- ^ read a character from stdin
-     | BIputchar       -- ^ write a character to stdout
-     | BIreadfile      -- ^ read file contents
-     | BIwritefile     -- ^ write file contents
-     -- * Compiler functions
-     | BIdef           -- ^ define a function
-     | BIlet           -- ^ let binding
-     deriving (Show, Bounded, Enum)
-
 -- | Symbol table
 type SymTable m = M.Map Symbol (FunctionDef m)
 -- | Runtime stack
@@ -105,13 +53,6 @@ getMeta (TRight m _)   = m
 getMeta (TPair  m _ _) = m
 getMeta (TList  m _)   = m
 getMeta (TUnit  m)     = m
-
--- | get builtin name
-builtInName = Symbol . tail . tail . show
-
--- | list all builtins
-allBuiltIns :: [BuiltIn]
-allBuiltIns = [(minBound)..(maxBound)]
 
 -- | perform a function on stack
 onStack f stk = Stack (f (let Stack s = stk in s))
