@@ -2,8 +2,10 @@
 module Builtins.Eval (eval) where
 
 import Sema.Term
+import Sema.Common
 import Parser.State
 import Backend.Eval
+import Builtins.Conversions
 
 import Data.Char
 
@@ -26,6 +28,10 @@ instance Evaluable (FunctionDef m) where
 -- builtin invokation
 instance Evaluable BuiltIn where
     eval BIfix = error "Fixpoint evaluation not implemented"
+    eval BIlet = error "Let not implemented"
+    eval BIdef = do
+        name <- pop; body <- pop
+        addFunc (Symbol $ termToString name) (FDUser body)
     eval BIdip = do f <- pop; x <- pop; eval f; push x
     eval BIsel = do
         f0 <- pop; f1 <- pop; x <- pop
@@ -42,6 +48,8 @@ instance Evaluable BuiltIn where
         evalP BIdup (x:s)   = x:x:s
         evalP BIqot (x:s)   = TQuot () x : s
         evalP BIcat (g:f:s) = TComp () f g : s
+        -- Unit
+        evalP BIunit s      = TUnit () : s
         -- Products
         evalP BIpair (b:a:s) = TPair () a b : s
         evalP BIunpair (TPair () a b : s) = b:a:s

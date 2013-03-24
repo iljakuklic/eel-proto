@@ -2,7 +2,7 @@
 module Sema.Term (
         Term(..), FunctionCall(..), FunctionDef(..), BuiltIn(..),
         SymTable, Stack,
-        getMeta, builtInName
+        getMeta, builtInName, allBuiltIns
     ) where
 
 import qualified Data.Map as M
@@ -33,6 +33,7 @@ data FunctionCall
 data FunctionDef m
      = FDUser    (Term m)  -- ^ user-defined function
      | FDBuiltIn BuiltIn   -- ^ built-in function
+     deriving (Show)
 
 -- | Built-in functions enumeration
 data BuiltIn 
@@ -45,6 +46,8 @@ data BuiltIn
      | BIdip           -- ^ dip
      | BIcat           -- ^ quotation composition
      | BIfix           -- ^ fixed point combinator
+     -- * Unit
+     | BIunit          -- ^ unit type
      -- * Products
      | BIpair          -- ^ pair constructor
      | BIunpair        -- ^ pair deconstructor
@@ -83,7 +86,7 @@ data BuiltIn
      -- * Compiler functions
      | BIdef           -- ^ define a function
      | BIlet           -- ^ let binding
-     deriving (Show)
+     deriving (Show, Bounded, Enum)
 
 -- | Symbol table
 type SymTable m = M.Map Symbol (FunctionDef m)
@@ -104,7 +107,11 @@ getMeta (TList  m _)   = m
 getMeta (TUnit  m)     = m
 
 -- | get builtin name
-builtInName = tail . tail . show
+builtInName = Symbol . tail . tail . show
+
+-- | list all builtins
+allBuiltIns :: [BuiltIn]
+allBuiltIns = [(minBound)..(maxBound)]
 
 instance Show (Term m) where
     show (TFunc  _ f)   = show f
