@@ -17,15 +17,15 @@ class Evaluable expr where
     eval :: Monad m => expr -> ParsecT s (PState Meta) m ()
 
 -- | Evaluate a pure function (mapping a stact to a stack) in Parsec monad
-evalPure f = modifyState (\ste -> ste { pStack = f (pStack ste) } )
+evalPure f = modifyState (\ste -> ste { pStack = onStack f (pStack ste) } )
 
 -- | Push value onto the stack
 push x = evalPure (\stk -> x : stk)
 -- | Pop value from the stack
 pop    = do
-    val <- (head . pStack) <$> getState
+    Stack s1 <- pStack <$> getState
     evalPure (\(_:stk) -> stk)
-    return val
+    return (head s1)
 
 -- | Add a rule to the rule table
 addRule nt pri rhs = modifyState (\ste -> ste { pRules = updateRT (pRules ste) } )

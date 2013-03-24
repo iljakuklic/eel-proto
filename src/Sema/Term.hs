@@ -1,8 +1,8 @@
 
 module Sema.Term (
         Term(..), FunctionCall(..), FunctionDef(..), BuiltIn(..),
-        SymTable, Stack,
-        getMeta, builtInName, allBuiltIns
+        SymTable, Stack(..),
+        getMeta, builtInName, allBuiltIns, onStack
     ) where
 
 import qualified Data.Map as M
@@ -91,7 +91,7 @@ data BuiltIn
 -- | Symbol table
 type SymTable m = M.Map Symbol (FunctionDef m)
 -- | Runtime stack
-type Stack      = [Term ()]
+newtype Stack   = Stack [Term ()]
 
 -- | get term metadata
 getMeta (TFunc  m _)   = m
@@ -112,6 +112,9 @@ builtInName = Symbol . tail . tail . show
 -- | list all builtins
 allBuiltIns :: [BuiltIn]
 allBuiltIns = [(minBound)..(maxBound)]
+
+-- | perform a function on stack
+onStack f stk = Stack (f (let Stack s = stk in s))
 
 instance Show (Term m) where
     show (TFunc  _ f)   = show f
@@ -142,3 +145,6 @@ instance Functor Term where
 instance Show FunctionCall where
     show (FCUser s)    = show s
     show (FCBuiltIn b) = show b
+
+instance Show Stack where
+    show (Stack s) = "$" ++ show (reverse s) ++ "$"

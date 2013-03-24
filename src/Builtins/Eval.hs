@@ -31,6 +31,7 @@ instance Evaluable BuiltIn where
     eval BIlet = error "Let not implemented"
     eval BIdef = do
         name <- pop; body <- pop
+        -- TODO check symbol validity
         addFunc (Symbol $ termToString name) (FDUser body)
     eval BIdip = do f <- pop; x <- pop; eval f; push x
     eval BIsel = do
