@@ -64,10 +64,10 @@ instance Show (Term m) where
     show (TInt   _ x)   = show x
     show (TFloat _ x)   = show x
     show (TChar  _ x)   = show x
-    show (TRight _ x)   = "{" ++ show x ++ ">"
-    show (TLeft  _ x)   = "<" ++ show x ++ "}"
-    show (TPair  _ a b) = "{" ++ show a ++ "," ++ show b ++ "}"
-    show (TList  _ xs)  = "(" ++ tail (init (show xs)) ++ ")"
+    show (TRight _ x)   = "({" ++ show x ++ ">)"
+    show (TLeft  _ x)   = "(<" ++ show x ++ "})"
+    show (TPair  _ a b) = "({" ++ show a ++ "," ++ show b ++ "})"
+    show (TList  _ xs)  = "([" ++ tail (init (show xs)) ++ "])"
     show (TUnit  _)     = "#"
 
 instance Functor Term where
