@@ -30,15 +30,15 @@ instance Evaluable BuiltIn where
     eval BIfix = error "Fixpoint evaluation not implemented"
     eval BIlet = error "Let not implemented"
     eval BIdef = do
-        name <- pop; body <- pop
+        name <- pop; TQuot _ body <- pop
         -- TODO check symbol validity
         addFunc (Symbol $ termToString name) (FDUser body)
-    eval BIdip = do f <- pop; x <- pop; eval f; push x
+    eval BIdip = do TQuot _ f <- pop; x <- pop; eval f; push x
     eval BIsel = do
-        f0 <- pop; f1 <- pop; x <- pop
+        TQuot _ f0 <- pop; TQuot _ f1 <- pop; x <- pop
         case x of
-            (TLeft  _ x') -> do push x'; eval f0
-            (TRight _ x') -> do push x'; eval f1
+            (TRight _ x') -> do push x'; eval f0
+            (TLeft  _ x') -> do push x'; eval f1
             _ -> error ("Sum type is not either Left or Right: " ++ show x)
     eval bi = evalPure (evalP bi)
       where
