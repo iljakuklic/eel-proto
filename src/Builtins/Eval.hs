@@ -27,18 +27,17 @@ instance Evaluable (FunctionDef m) where
 
 -- builtin invokation
 instance Evaluable BuiltIn where
-    eval BIfix = error "Fixpoint evaluation not implemented"
     eval BIlet = error "Let not implemented"
+    eval BIfix = error "Fixpoint evaluation not implemented"
     eval BIdef = do
         name <- pop; TQuot _ body <- pop
-        -- TODO check symbol validity
         addFunc (Symbol $ termToString name) (FDUser body)
     eval BIdip = do TQuot _ f <- pop; x <- pop; eval f; push x
     eval BIsel = do
-        TQuot _ f0 <- pop; TQuot _ f1 <- pop; x <- pop
+        TQuot _ fb <- pop; TQuot _ fa <- pop; x <- pop
         case x of
-            (TRight _ x') -> do push x'; eval f0
-            (TLeft  _ x') -> do push x'; eval f1
+            (TSumA _ a) -> do push a; eval fa
+            (TSumB _ b) -> do push b; eval fb
             _ -> error ("Sum type is not either Left or Right: " ++ show x)
     eval bi = evalPure (evalP bi)
       where
@@ -55,13 +54,13 @@ instance Evaluable BuiltIn where
         evalP BIpair (b:a:s) = TPair () a b : s
         evalP BIunpair (TPair () a b : s) = b:a:s
         -- Sums
-        evalP BIlft (x:s) = TLeft  () x : s
-        evalP BIrgt (x:s) = TRight () x : s
+        evalP BIina (x:s) = TSumA () x : s
+        evalP BIinb (x:s) = TSumB () x : s
         -- Lists
-        evalP BIlistw (TLeft  () (TUnit ())                 : s) = TList () []     : s
-        evalP BIlistw (TRight () (TPair () x (TList () xs)) : s) = TList () (x:xs) : s
-        evalP BIlistu (TList () []     : s) = TLeft  () (TUnit ())                 : s
-        evalP BIlistu (TList () (x:xs) : s) = TRight () (TPair () x (TList () xs)) : s
+        evalP BIlistw (TSumB () (TUnit ())                 : s) = TList () []     : s
+        evalP BIlistw (TSumA () (TPair () x (TList () xs)) : s) = TList () (x:xs) : s
+        evalP BIlistu (TList () []     : s) = TSumB () (TUnit ())                 : s
+        evalP BIlistu (TList () (x:xs) : s) = TSumA () (TPair () x (TList () xs)) : s
         -- Integers
         evalP BIadd s = int2op (+) s
         evalP BIsub s = int2op (-) s
@@ -90,7 +89,7 @@ instance Evaluable BuiltIn where
         flt1op op (TFloat () x : s)               = TFloat () (op x)     : s
         cmpop x y s = res : s
             where res = case compare x y of
-                    EQ -> TRight () (TUnit ())
-                    LT -> TLeft  () (TRight () (TUnit ()))
-                    GT -> TLeft  () (TLeft  () (TUnit ()))
+                    EQ -> TSumA () (TUnit ())
+                    LT -> TSumB () (TSumA () (TUnit ()))
+                    GT -> TSumB () (TSumB () (TUnit ()))
 

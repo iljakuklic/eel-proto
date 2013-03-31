@@ -19,8 +19,8 @@ data Term m
      | TInt   m Int                 -- ^ integer value
      | TFloat m Float               -- ^ floating-point value
      | TChar  m Char                -- ^ character value
-     | TLeft  m (Term m)            -- ^ sum type: left case
-     | TRight m (Term m)            -- ^ sum type: right case
+     | TSumA  m (Term m)            -- ^ sum type: left case
+     | TSumB  m (Term m)            -- ^ sum type: right case
      | TPair  m (Term m) (Term m)   -- ^ product value
      | TList  m [Term m]            -- ^ list of values
      | TUnit  m                     -- ^ unit type value
@@ -48,8 +48,8 @@ getMeta (TQuot  m _)   = m
 getMeta (TInt   m _)   = m
 getMeta (TFloat m _)   = m
 getMeta (TChar  m _)   = m
-getMeta (TLeft  m _)   = m
-getMeta (TRight m _)   = m
+getMeta (TSumA  m _)   = m
+getMeta (TSumB  m _)   = m
 getMeta (TPair  m _ _) = m
 getMeta (TList  m _)   = m
 getMeta (TUnit  m)     = m
@@ -64,8 +64,8 @@ instance Show (Term m) where
     show (TInt   _ x)   = show x
     show (TFloat _ x)   = show x
     show (TChar  _ x)   = show x
-    show (TRight _ x)   = "({" ++ show x ++ ">)"
-    show (TLeft  _ x)   = "(<" ++ show x ++ "})"
+    show (TSumA  _ x)   = "(A:" ++ show x ++ ")"
+    show (TSumB  _ x)   = "(B:" ++ show x ++ ")"
     show (TPair  _ a b) = "({" ++ show a ++ "," ++ show b ++ "})"
     show (TList  _ xs)  = "([" ++ tail (init (show xs)) ++ "])"
     show (TUnit  _)     = "#"
@@ -77,8 +77,8 @@ instance Functor Term where
     fmap f (TInt   m a)   = TInt   (f m) a
     fmap f (TFloat m a)   = TFloat (f m) a
     fmap f (TChar  m a)   = TChar  (f m) a
-    fmap f (TRight m a)   = TRight (f m) (fmap f a)
-    fmap f (TLeft  m a)   = TLeft  (f m) (fmap f a)
+    fmap f (TSumA  m a)   = TSumA  (f m) (fmap f a)
+    fmap f (TSumB  m a)   = TSumB  (f m) (fmap f a)
     fmap f (TPair  m a b) = TPair  (f m) (fmap f a) (fmap f b)
     fmap f (TList  m as)  = TList  (f m) (fmap (fmap f) as)
     fmap f (TUnit  m)     = TUnit  (f m)

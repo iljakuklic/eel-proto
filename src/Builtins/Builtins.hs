@@ -20,8 +20,8 @@ data BuiltIn
      | BIpair          -- ^ pair constructor
      | BIunpair        -- ^ pair deconstructor
      -- * Sums
-     | BIlft           -- ^ left injection
-     | BIrgt           -- ^ right injection
+     | BIina           -- ^ left injection
+     | BIinb           -- ^ right injection
      | BIsel           -- ^ selection (sum deconstructor)
      -- * Lists
      | BIlistw         -- ^ list wrap by 1 level
