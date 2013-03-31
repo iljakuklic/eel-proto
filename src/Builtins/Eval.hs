@@ -28,7 +28,10 @@ instance Evaluable (FunctionDef m) where
 -- builtin invokation
 instance Evaluable BuiltIn where
     eval BIlet = error "Let not implemented"
-    eval BIfix = error "Fixpoint evaluation not implemented"
+    eval BIfix = do
+        funq@(TQuot _ fun) <- pop
+        push (TQuot () $ TComp () funq $ TFunc () $ FCBuiltIn BIfix)
+        eval fun
     eval BIdef = do
         name <- pop; TQuot _ body <- pop
         addFunc (Symbol $ termToString name) (FDUser body)
