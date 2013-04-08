@@ -23,9 +23,9 @@ instance Show CTok where
 -- | Command-line token
 cmdTok test = token showT posT testT
   where
-    showT (CTok pos tok) = show (tok :: String)
-    posT  (CTok pos tok) = newPos "<command-line>" 0 pos
-    testT (CTok pos tok) = test tok
+    showT (CTok _ tok) = show (tok :: String)
+    posT  (CTok pos _) = newPos "<command-line>" 0 pos
+    testT (CTok _ tok) = test tok
 
 
 -- | token satisfying given predicate
