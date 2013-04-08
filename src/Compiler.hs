@@ -32,12 +32,24 @@ preludeName = "prelude.eel"
 parseStrs initSte strs = foldM parseStr initSte strs
   where parseStr ste (name, str) = runParser ptop ste name str
 
+-- | Read specified input
+readIn :: InputSpec -> IO (String, String)
+readIn (InputFile path) = do
+    -- TODO path lookup
+    prog <- readFile path
+    return (path, prog)
+readIn (InputLit  prog) = return ("<commandline>", prog)
+readIn (InputStdin)     = do
+    -- TODO REPL
+    prog <- getContents
+    return ("<stdin>", prog)
+
 -- | Run the compiler with given settings.
 runCompiler settings = do
     inp <- input
-    return $ parseStrs initState (zip infiles inp)
+    return $ parseStrs initState inp
   where
-    infiles = inputFilePaths settings
-    input   = mapM readFile infiles
+    infiles = map InputFile $ inputFilePaths settings
+    input   = mapM readIn infiles
 
 
