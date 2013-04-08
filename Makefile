@@ -1,10 +1,17 @@
 
-WARNFLAGS=-Wall -fno-warn-missing-signatures -fno-warn-orphans
-EXTFLAGS=-XNoMonomorphismRestriction
-GHCFLAGS=-O -isrc $(EXTFLAGS) $(WARNFLAGS)
+top: eel
 
-eel: src/*.hs src/*/*.hs
-	ghc $(GHCFLAGS) -o eel --make src/Main.hs
+dist:
+	cabal configure
+
+dist/build/eel/eel: dist src/*.hs src/*/*.hs
+	cabal build
+
+eel: dist/build/eel/eel
+	cp $< $@
 
 clean:
-	rm -f eel src/*/*.{o,hi} src/*.{o,hi}
+	rm -f eel
+	cabal clean
+
+.PHONY: clean top
