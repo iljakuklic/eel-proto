@@ -1,0 +1,25 @@
+
+[ id2 zap ] 'typeas' def
+
+[ qot dip ] 'swap' def
+[ unit swap dip zap ] 'i' def
+[ i ] 'apply' def
+[ [ zap ] swap cat ] 'zapq' def
+
+[ unit typeas zap ] 'ununit' def
+[ [ ununit ] swap cat ] 'ununitq' def
+
+[ [ inb ] [ ina ] sel ] 'abswap' def
+
+[ unit inb ] 'nothing' def
+[ ina nothing typeas ] 'just' def
+[ ununitq sel ] 'maybe' def
+
+[ unit just ] 'true' def
+[ nothing true typeas ] 'false' def
+[ [ ununitq ] dip maybe ] 'ifelse' def
+[ [] ifelse ] 'ifthen' def
+[ [ false ] [ true ] ifelse ] 'not' def
+[ not [ zap false ] ifthen ] 'and' def
+[ [ zap true ] ifthen ] 'or' def
+
