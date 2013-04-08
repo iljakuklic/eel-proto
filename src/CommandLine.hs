@@ -60,6 +60,7 @@ cmdLineDesc = Settings
     <|?> maybeSwitch ["-L", "--LLVM", "--llvm"] id
     <|?> boolSwitch  ["-v", "--verbose"]
     <|?> boolSwitch  ["-i", "--interactive"]
+    <|?> boolSwitch  ["-P", "--no-prelude"]
     <|?> optSwitch   ["-e", "--eval"] "" id
     <|?> optPosArgs
 

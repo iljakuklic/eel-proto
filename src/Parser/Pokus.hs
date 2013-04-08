@@ -37,11 +37,7 @@ ptop  = spaces >> peval >> eof >> getState
 testparse str =
     case runParser ptop initState "<here>" str of
         Left err  -> putStrLn (show err)
-        Right ste -> printState ste
+        Right ste -> printFuncs ste >> putStrLn "-----------------" >> printStack ste
 
-printState (PState st _rul (Stack stk)) = do
-    putStrLn "Funcs:"
-    mapM_ putStrLn [ show n ++ " = " ++ show d | (n, FDUser d) <- M.toList st]
-    putStrLn "Stack:"
-    mapM_ (putStrLn . show) (reverse stk)
-
+printFuncs (PState st _ _) = mapM_ putStrLn [ show n ++ " = " ++ show d | (n, FDUser d) <- M.toList st]
+printStack (PState _ _ (Stack stk)) = mapM_ (putStrLn . show) (reverse stk)
