@@ -1,19 +1,31 @@
 
-module Compiler(Settings(..), runCompiler, printState) where
+module Compiler(Settings(..), InputSpec(..), runCompiler, printState) where
 
 import Parser.Pokus
 
 import Control.Monad
 import Text.Parsec
 
+-- | Input specification
+data InputSpec
+     = InputFile FilePath    -- ^ read file as input
+     | InputLit  String      -- ^ literal string input
+     | InputStdin            -- ^ read input from the stdin
+
 -- | Compiler settings
 data Settings = Settings {
         outputFilePath :: FilePath,         -- ^ output binary file
         llvmFilePath   :: Maybe FilePath,   -- ^ output LLVM file
         verboseOutput  :: Bool,             -- ^ extra debugging output
+        interactMode   :: Bool,             -- ^ enable interactive mode
+        evalString     :: String,           -- ^ string to evaluate
         inputFilePaths :: [FilePath]        -- ^ input files to read
     } deriving Show
 
+-- | file lookup directories
+lookupDirs = [".", "lib/", "test/"]
+
+-- | prelude file name
 preludeName = "prelude.eel"
 
 -- | Parse the list of strings with identifiers (filenames) in sequence

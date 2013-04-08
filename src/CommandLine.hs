@@ -6,7 +6,6 @@ import Compiler
 import Text.Parsec
 import Text.Parsec.Perm
 import Text.Parsec.Pos
-import Text.Parsec.Error
 import Data.List
 
 -- | Command-line parsing error
@@ -30,7 +29,7 @@ cmdTok test = token showT posT testT
 
 
 -- | token satisfying given predicate
-satisfyTok pred = cmdTok (\t -> if pred t then Just t else Nothing)
+satisfyTok p = cmdTok (\t -> if p t then Just t else Nothing)
 -- | switch token
 switchTok names = satisfyTok (\t -> t `elem` names) <?> "command line switch"
 -- | command-line token
@@ -56,6 +55,8 @@ cmdLineDesc = Settings
     <$?> optSwitch   ["-o", "--output"] "a.out" id
     <|?> maybeSwitch ["-L", "--LLVM", "--llvm"] id
     <|?> boolSwitch  ["-v", "--verbose"]
+    <|?> boolSwitch  ["-i", "--interactive"]
+    <|?> optSwitch   ["-e", "--eval"] "" id
     <|?> optPosArgs
 
 -- | Command-line parser

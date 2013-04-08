@@ -5,7 +5,7 @@ import Builtins.Eval
 import Sema.Term
 import Parser.State
 import Sema.Common
-import Builtins.Builtins
+import Builtins.Builtins()
 import Builtins.Table
 
 import Data.Char

@@ -1,9 +1,9 @@
 
 module Builtins.Table (builtInsTable) where
 
-import Parser.State
 import Builtins.Builtins
 import Sema.Term
+
 import qualified Data.Map as M
 
 builtInsTable :: SymTable m

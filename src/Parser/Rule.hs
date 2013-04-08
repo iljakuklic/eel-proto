@@ -7,7 +7,6 @@ module Parser.Rule (
 import Sema.Common
 import Sema.Term
 
-import Text.Parsec
 import qualified Data.Map as M
 
 -- | Grammar rule table is a mapping from nonterminal symbol to the RHS

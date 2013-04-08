@@ -88,8 +88,11 @@ instance Evaluable BuiltIn where
         evalP f s = error ("Could not evaluate " ++ show f ++ " on " ++ show s)
         -- helpers
         int2op op (TInt   () y : TInt   () x : s) = TInt   () (x `op` y) : s
+        int2op _op _                              = undefined
         flt2op op (TFloat () y : TFloat () x : s) = TFloat () (x `op` y) : s
+        flt2op _op _                              = undefined
         flt1op op (TFloat () x : s)               = TFloat () (op x)     : s
+        flt1op _op _                              = undefined
         cmpop x y s = res : s
             where res = case compare x y of
                     EQ -> TSumA () (TUnit ())

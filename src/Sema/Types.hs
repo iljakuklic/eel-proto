@@ -6,7 +6,7 @@ module Sema.Types(
     -- * Type manipulation functions
     toListUniq, tyRow, isTypeMono, isRowMono,
     -- * Type representation smart constructors
-    tUnit, tChar, tNum, tReal, tBool, tString, tMaybe
+    tUnit, tChar, tProd, tFunc, tNum, tReal, tBool, tString, tMaybe
   ) where
 
 import Sema.Common
@@ -33,13 +33,13 @@ instance Functor Type where
     fmap f (TVar v) = TVar (f v)
     fmap f (TList t) = TList (fmap f t)
     fmap f (TBin c a b) = TBin c (fmap f a) (fmap f b)
-    fmap f (TAtom n) = TAtom n
+    fmap _f (TAtom n) = TAtom n
 
 instance Foldable Type where
     foldMap f (TVar v) = f v
     foldMap f (TList t) = foldMap f t
     foldMap f (TBin _ a b) = foldMap f a <> foldMap f b
-    foldMap f (TAtom _) = mempty
+    foldMap _f (TAtom _) = mempty
 
 -- forward row instances to list
 instance Functor  Row where fmap    f (Row xs) = Row $ (fmap . fmap) f xs
@@ -105,13 +105,13 @@ instance (Eq v, Show v) => Show (Type v) where
   show = show' False
    where
     -- "syntax sugar" aliases
-    show' p t               | t == tString = "string"           -- string  == [char]
-    show' p t               | t == tBool   = "bool"             -- boolean == (unit | unit)
-    show' p (TBin TSum u b) | u == tUnit = show' True b ++ "?"  -- maybe b == (unit | b)
+    show' _p t               | t == tString = "string"           -- string  == [char]
+    show' _p t               | t == tBool   = "bool"             -- boolean == (unit | unit)
+    show' _p (TBin TSum u b) | u == tUnit = show' True b ++ "?"  -- maybe b == (unit | b)
     -- non-sugared rendering
-    show' p (TAtom s)    = show s
-    show' p (TList a)    = "[" ++ show' True a ++ "]"
-    show' p (TVar v)     = '%' : show v
+    show' _p (TAtom s)    = show s
+    show' _p (TList a)    = "[" ++ show' True a ++ "]"
+    show' _p (TVar v)     = '%' : show v
     show' p (TBin c a b) = parF $ show' pl a ++ t_op c ++ show' pr b
       where
         parF = case (p, c) of (False, TProd) -> id; _ -> parens
@@ -120,7 +120,7 @@ instance (Eq v, Show v) => Show (Type v) where
         p' TSum  = (True, True)
         (pl, pr) = p' c
         parens str = "(" ++ str ++ ")"
-        t_op c = case c of TSum -> " | "; TProd -> ", "; TFunc -> " -> "
+        t_op cc = case cc of TSum -> " | "; TProd -> ", "; TFunc -> " -> "
 
 instance (Eq v, Show v) => Show (Row v) where
   show (Row xs) = "[[" ++ show (reverse xs) ++ ">>"

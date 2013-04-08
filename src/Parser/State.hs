@@ -1,13 +1,11 @@
 
 module Parser.State (
-        PState(..), Meta(..),
+        PState(..), Meta,
         lookupFunc, lookupFuncCall
     ) where
 
 import Parser.Rule
-import Sema.Types
 import Sema.Term
-import Sema.Common
 
 import Text.Parsec
 import Control.Applicative

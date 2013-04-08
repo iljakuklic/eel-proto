@@ -6,7 +6,6 @@ module Sema.Term (
     ) where
 
 import qualified Data.Map as M
-import Data.Functor
 
 import Sema.Common
 import Builtins.Builtins
