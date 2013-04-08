@@ -18,7 +18,7 @@ initSymTab = builtInsTable
 
 initState = PState { pSymTable = initSymTab, pRules = M.empty, pStack = Stack [] }
 
-ptok p = p <* spaces
+ptok p = p <* skip
 pstok = ptok . string
 psbet a b = between (pstok a) (pstok b)
 pterm =  TComp () <$> pfunc <*> pterm
@@ -31,7 +31,8 @@ pstr  = TList () <$> many pchr
 pchr  = TChar () <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape seqs
 psymb = Symbol <$> ((:) <$> satisfy isAlpha <*> many alphaNum)
 peval = () <$ many (pfunc >>= eval)
-ptop  = spaces >> peval >> eof >> getState
+ptop  = skip >> peval >> eof >> getState
+skip  = many ((space >> return ()) <|> (try (string "//") >> (anyChar `manyTill` char '\n') >> return ()))
 
 
 testparse str =
