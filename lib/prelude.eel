@@ -1,25 +1,90 @@
 
+// TYPE UTILS
+
+// poor-mans type cast
 [ id2 zap ] 'typeas' def
 
+// COMBINATORS and STACK MANIPULATORS
+
+// swap two top positions
 [ qot dip ] 'swap' def
+// swap 2nd and 3rd items on the stack
+[ [ swap ] dip ] 'swapd' def
+// place top to the 3rd pos
+[ swap swapd ] 'bury' def
+// place top to th 4th position
+[ swap [bury] dip ] 'bury4' def
+// place 3rd item to the top
+[ swapd swap ] 'dig' def
+// drop 2 top elements
+[ zap zap ] 'zap2' def
+// apply a function to the stack
 [ unit swap dip zap ] 'i' def
+// alias for i
 [ i ] 'apply' def
-[ [ zap ] swap cat ] 'zapq' def
-
+// like apply, but keeps the function
+[ dup [ i ] dip ] 'keep' def
+// dip keeping 2 elements
+[ swap [ dip ] dip ] 'dip2' def
+// backward composition
+[ swap cat ] 'tac' def
+// zap in quotation
+[ [ zap ] tac ] 'zapq' def
+// remove unit
 [ unit typeas zap ] 'ununit' def
-[ [ ununit ] swap cat ] 'ununitq' def
+// remove unit in a quotation
+[ [ ununit ] tac ] 'ununitq' def
 
+// SUM TYPE
+
+// swap A and B cases in a tagged union
 [ [ inb ] [ ina ] sel ] 'abswap' def
 
+// MAYBE
+
+// nothing constructor
 [ unit inb ] 'nothing' def
+// just constructor
 [ ina nothing typeas ] 'just' def
+// maybe deconstructor
 [ ununitq sel ] 'maybe' def
 
+// BOOLEANS
+
+// true constant
 [ unit just ] 'true' def
+// false constant
 [ nothing true typeas ] 'false' def
+// if-then-else
 [ [ ununitq ] dip maybe ] 'ifelse' def
+// if-then
 [ [] ifelse ] 'ifthen' def
+// negation
 [ [ false ] [ true ] ifelse ] 'not' def
+// logical product
 [ not [ zap false ] ifthen ] 'and' def
+// logical sum
 [ [ zap true ] ifthen ] 'or' def
 
+// LISTS
+
+// nil constructor
+[ unit inb listw ] 'nil' def
+// cons constructor
+[ pair ina listw ] 'cons' def
+// deconstructor
+[ [ [ listu ] dip [ unpair ] tac ] dip maybe ] 'unlist' def
+// left-associative list catamorphism
+[ dig [ bury4 [ [ dig keep swap dig ] dip swap i ] [ [ zap2 ] dip ] unlist ] fix ] 'fold' def
+//[ [ zap2 ] dip ] 'fold' def
+// list reversal
+[ [ swap cons ] nil fold ] 'reverse' def
+// right-associative list catamorphism
+[ [ reverse ] dip2 fold ] 'rfold' def
+// list endofunctor
+[ [ swap cons ] cat nil rfold ] 'map' def
+
+// special folds
+[ [ add ] 0 fold ] 'sum' def
+[ [ mul ] 1 fold ] 'product' def
+[ [ zap 1 add ] 0 fold ] 'length' def
