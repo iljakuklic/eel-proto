@@ -20,8 +20,11 @@ dist/build/eel/eel: dist src/*.hs src/*/*.hs
 eel: dist/build/eel/eel
 	cp $< $@
 
+repl: eel
+	rlwrap -S'>>> ' -pgreen ./eel -i
+
 clean:
 	rm -f eel
 	cabal clean
 
-.PHONY: clean top doc docs readdoc
+.PHONY: clean top doc docs readdoc repl

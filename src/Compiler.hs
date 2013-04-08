@@ -2,18 +2,21 @@
 module Compiler(Settings(..), InputSpec(..), runCompiler) where
 
 import Parser.Pokus
+import Parser.State
+import Sema.Term(Stack(Stack))
 
 import Prelude hiding (catch)
 import Control.Monad
 import Text.Parsec
 import System.FilePath
 import Control.Exception
+import System.IO
+import Data.Char
 
 -- | Input specification
 data InputSpec
      = InputFile FilePath    -- ^ read file as input
      | InputLit  String      -- ^ literal string input
-     | InputStdin            -- ^ read input from the stdin
 
 -- | Compiler settings
 data Settings = Settings {
@@ -43,6 +46,27 @@ lookupFile (dir:dirs) file = fmap Just (readFile (dir </> file)) `catch` constE 
 lookupFile [] _file        = return Nothing
 constE = const :: a -> IOError -> a
 
+-- | Read-Eval-Print Loop: quick, dirty, and ugly
+repl n ste = do
+    let quit = return (Right ste)
+    let continue = repl (n + 1)
+    end <- hIsEOF stdin
+    if end then quit else do
+        lineIn <- getLine
+        case reverse . dropWhile isSpace . reverse $ lineIn of
+            ""        -> continue ste
+            ":q"      -> quit
+            ":quit"   -> quit
+            ":exit"   -> quit
+            ":clear"  -> continue (ste { pStack = Stack []})
+            ":ls"     -> printFuncs ste >> continue ste
+            line      -> do
+                let parser' = fmap (flip setSourceLine n) getPosition >>= setPosition >> ptop
+                ste'' <- case runParser parser' ste "<repl>" line of
+                    Left err   -> hPutStrLn stderr ("ERROR: " ++ show err) >> return ste
+                    Right ste' -> (putStrLn $ show $ pStack ste') >> return ste'
+                continue ste''
+
 -- | Read specified input
 readIn :: InputSpec -> IO (String, String)
 readIn (InputFile path) = do
@@ -51,22 +75,20 @@ readIn (InputFile path) = do
         Just prog -> return (path, prog)
         Nothing -> fail ("Could not load " ++ show path)
 readIn (InputLit  prog) = return ("<commandline>", prog)
-readIn (InputStdin)     = do
-    -- TODO REPL
-    prog <- getContents
-    return ("<stdin>", prog)
 
 -- | Run the compiler with given settings.
 runCompiler settings = do
     inp <- input
-    return $ parseStrs initState inp
+    let res' = parseStrs initState inp
+    if interactMode settings
+        then either (return . Left) (\ste' -> repl 1 ste') res'
+        else return res'
   where
     infiles    = map InputFile $ inputFilePaths settings
     input      = mapM readIn inputSpec
     prelude'   = onFlag (not . noPreludeFlag) (InputFile preludeName)
-    inter'     = onFlag interactMode InputStdin
     cmdeval'   = [InputLit (evalString settings)]
-    inputSpec  = prelude' ++ infiles ++ inter' ++ cmdeval'
+    inputSpec  = prelude' ++ infiles ++ cmdeval'
     onFlag f x = if f settings then [x] else []
 
 
