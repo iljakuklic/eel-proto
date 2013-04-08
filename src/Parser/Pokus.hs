@@ -32,7 +32,7 @@ pchr  = TChar () <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape s
 psymb = Symbol <$> ((:) <$> satisfy isAlpha <*> many alphaNum)
 peval = () <$ many (pfunc >>= eval)
 ptop  = skip >> peval >> eof >> getState
-skip  = many ((space >> return ()) <|> (try (string "//") >> (anyChar `manyTill` char '\n') >> return ()))
+skip  = many ((space >> return ()) <|> (try (string "//") >> (anyChar `manyTill` ((char '\n' >> return ()) <|> eof)) >> return ()))
 
 
 testparse str =
@@ -41,4 +41,4 @@ testparse str =
         Right ste -> printFuncs ste >> putStrLn "-----------------" >> printStack ste
 
 printFuncs (PState st _ _) = mapM_ putStrLn [ show n ++ " = " ++ show d | (n, FDUser d) <- M.toList st]
-printStack (PState _ _ (Stack stk)) = mapM_ (putStrLn . show) (reverse stk)
+printStack (PState _ _ (Stack stk)) = mapM_ (putStrLn . show) stk
