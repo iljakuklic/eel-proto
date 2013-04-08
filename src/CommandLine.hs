@@ -12,7 +12,11 @@ import Data.List
 newtype CommandLineError = CommandLineError ParseError
 
 instance Show CommandLineError where 
-    show (CommandLineError e) = unlines (("Could not parse command-line argument no. " ++ show (sourceColumn $ errorPos e)) : (drop 1 $ lines $ show e))
+    show (CommandLineError e) = unlines (header : origMsg)
+      where
+        colStr  = show (sourceColumn $ errorPos e)
+        header  = "Could not parse command-line argument no. " ++ colStr
+        origMsg = drop 1 $ lines $ show e
 
 -- | Position-annotated command-line token
 data CTok = CTok Int String
