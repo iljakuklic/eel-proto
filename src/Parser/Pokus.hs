@@ -6,6 +6,7 @@ import Sema.Term
 import Parser.State
 import Sema.Common
 import Builtins.Builtins
+import Builtins.Table
 
 import Data.Char
 import Text.Parsec hiding (many, (<|>))
@@ -13,7 +14,7 @@ import Control.Applicative
 import qualified Data.Map as M
 
 initSymTab :: SymTable m
-initSymTab = M.fromList [ (builtInName bi, FDBuiltIn bi) | bi <- allBuiltIns ]
+initSymTab = builtInsTable
 
 initState = PState { pSymTable = initSymTab, pRules = M.empty, pStack = Stack [] }
 
@@ -32,7 +33,8 @@ psymb = Symbol <$> ((:) <$> satisfy isAlpha <*> many alphaNum)
 peval = () <$ many (pfunc >>= eval)
 ptop  = spaces >> peval >> eof >> getState
 
-doparse str =
+
+testparse str =
     case runParser ptop initState "<here>" str of
         Left err  -> putStrLn (show err)
         Right ste -> printState ste
@@ -41,5 +43,5 @@ printState (PState st _rul (Stack stk)) = do
     putStrLn "Funcs:"
     mapM_ putStrLn [ show n ++ " = " ++ show d | (n, FDUser d) <- M.toList st]
     putStrLn "Stack:"
-    mapM_ (putStrLn . show) stk
+    mapM_ (putStrLn . show) (reverse stk)
 
