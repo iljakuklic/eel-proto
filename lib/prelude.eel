@@ -34,11 +34,19 @@
 [ unit typeas zap ] 'ununit' def
 // remove unit in a quotation
 [ [ ununit ] tac ] 'ununitq' def
+// partial application
+[ qot swap cat ] 'papply' def
 
 // SUM TYPE
 
 // swap A and B cases in a tagged union
 [ [ inb ] [ ina ] sel ] 'abswap' def
+// map over A case
+[ [ ina ] cat [ inb ] sel ] 'smap' def
+// monadic join over sums ((A+B)+B) -> (A+B)
+[ [] [ inb ] sel ] 'sjoin' def
+// monadic composition of sums (X+B) (X->(Y+B)) -> (Y+B)
+[ smap sjoin ] 'sbind' def
 
 // MAYBE
 
@@ -59,6 +67,8 @@
 [ [ ununitq ] dip maybe ] 'ifelse' def
 // if-then
 [ [] ifelse ] 'ifthen' def
+// sum type to bool
+[ [ true ] [ false ] sel ] 'sbool' def
 // negation
 [ [ false ] [ true ] ifelse ] 'not' def
 // logical product
@@ -74,6 +84,8 @@
 [ pair ina listw ] 'cons' def
 // deconstructor
 [ [ [ listu ] dip [ unpair ] tac ] dip maybe ] 'unlist' def
+// nil test
+[ listu sbool ] 'isnil' def
 // left-associative list catamorphism
 [ dig [ bury4 [ [ dig keep swap dig ] dip swap i ] [ [ zap2 ] dip ] unlist ] fix ] 'fold' def
 //[ [ zap2 ] dip ] 'fold' def
@@ -88,3 +100,31 @@
 [ [ add ] 0 fold ] 'sum' def
 [ [ mul ] 1 fold ] 'product' def
 [ [ zap 1 add ] 0 fold ] 'length' def
+[ map [ and ] true fold ] 'all' def
+[ map [ or ] false fold ] 'any' def
+
+// ORDERING
+
+// A B [A<B case] [A=B case] [A>B case] uncmp
+[ swap [ qot [ qot ] dip cat [ ifelse ] cat ] dip [ abswap ] dip2 maybe ] 'uncmp' def
+// comparisons
+[ [ true  ] [ false ] [ false ] uncmp ] 'lt' def
+[ [ false ] [ true  ] [ false ] uncmp ] 'eq' def
+[ [ false ] [ false ] [ true  ] uncmp ] 'gt' def
+[ [ false ] [ true  ] [ true  ] uncmp ] 'ge' def
+[ [ true  ] [ true  ] [ false ] uncmp ] 'le' def
+[ [ true  ] [ false ] [ true  ] uncmp ] 'ne' def
+
+// PRODUCT
+[ unpair zap ] 'geta' def
+[ unpair [ zap ] dip ] 'getb' def
+[ unpair swap pair ] 'pswap' def
+[ [ unpair ] dip dip pair ] 'pmap' def
+// row-like products
+[ unit pair ] 'pnil' def
+[ geta     ] 'at0' def
+[ getb at0 ] 'at1' def
+[ getb at1 ] 'at2' def
+[ getb at2 ] 'at3' def
+[ getb at3 ] 'at4' def
+
