@@ -8,6 +8,7 @@ module Sema.Term (
 import qualified Data.Map as M
 
 import Sema.Common
+import Sema.Types
 import Builtins.Builtins
 
 -- | Term Representation
@@ -31,8 +32,8 @@ data FunctionCall
 
 -- | function definition
 data FunctionDef m
-     = FDUser    (Term m)  -- ^ user-defined function
-     | FDBuiltIn BuiltIn   -- ^ built-in function
+     = FDUser    (Type Symbol) (Term m)  -- ^ user-defined function
+     | FDBuiltIn BuiltIn                 -- ^ built-in function
      deriving (Show)
 
 -- | Symbol table

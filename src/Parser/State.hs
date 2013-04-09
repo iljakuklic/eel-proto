@@ -40,5 +40,5 @@ lookupFunc sym = do
 lookupFuncCall sym = do
     fd <- lookupFunc sym
     return $ case fd of
-        FDUser _     -> FCUser sym
+        FDUser _ _   -> FCUser sym
         FDBuiltIn bi -> FCBuiltIn bi

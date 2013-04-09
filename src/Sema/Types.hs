@@ -13,33 +13,31 @@ import Sema.Common
 
 import Prelude hiding (all)
 import Data.Foldable
-import Data.Monoid
+import Data.Traversable
+import Control.Applicative
 import Data.List hiding (all)
 
 -- | Type specification representation.
-data Type v = TAtom Symbol                  -- ^ atomic type
-            | TVar  v                       -- ^ type variable
-            | TList (Type v)                -- ^ list type
-            | TBin Type2 (Type v) (Type v)  -- ^ binary type
+data Type v = TyAtom Symbol                  -- ^ atomic type
+            | TyVar  v                       -- ^ type variable
+            | TyList (Type v)                -- ^ list type
+            | TyBin Type2 (Type v) (Type v)  -- ^ binary type
             deriving Eq
 
 -- | Compound type variants (sum, product, function)
-data Type2 = TSum | TProd | TFunc deriving Eq
+data Type2 = TySum | TyProd | TyFunc deriving Eq
 
 -- | Row is a list of types
 newtype Row v = Row [Type v] deriving (Eq)
 
-instance Functor Type where
-    fmap f (TVar v) = TVar (f v)
-    fmap f (TList t) = TList (fmap f t)
-    fmap f (TBin c a b) = TBin c (fmap f a) (fmap f b)
-    fmap _f (TAtom n) = TAtom n
+instance Functor  Type where fmap    = fmapDefault
+instance Foldable Type where foldMap = foldMapDefault
 
-instance Foldable Type where
-    foldMap f (TVar v) = f v
-    foldMap f (TList t) = foldMap f t
-    foldMap f (TBin _ a b) = foldMap f a <> foldMap f b
-    foldMap _f (TAtom _) = mempty
+instance Traversable Type where
+    traverse _ (TyAtom a)    = pure (TyAtom a)
+    traverse f (TyVar v)     = TyVar <$> f v
+    traverse f (TyList t)    = TyList <$> traverse f t
+    traverse f (TyBin t a b) = TyBin t <$> traverse f a <*> traverse f b
 
 -- forward row instances to list
 instance Functor  Row where fmap    f (Row xs) = Row $ (fmap . fmap) f xs
@@ -53,7 +51,7 @@ toListUniq = nub . toList
 tyRow :: (Eq v) => Type v -> Row v
 tyRow = Row . tyRow'
   where
-    tyRow' (TBin TProd t1 t2) = t2 : tyRow' t1
+    tyRow' (TyBin TyProd t1 t2) = t2 : tyRow' t1
     tyRow' t = [t]
 
 -- | Chack if type is monomorphic (no type variables)
@@ -65,11 +63,11 @@ isRowMono :: Row v -> Bool
 isRowMono (Row xs) = all isTypeMono (init xs)
 
 -- | Create atom type
-tAtom name = TAtom (Symbol name)
+tAtom name = TyAtom (Symbol name)
 
-tSum  = TBin TSum
-tProd = TBin TProd
-tFunc = TBin TFunc
+tSum  = TyBin TySum
+tProd = TyBin TyProd
+tFunc = TyBin TyFunc
 
 -- | Unit type shortcut.
 tUnit :: Type v
@@ -97,7 +95,7 @@ tBool = tMaybe tUnit
 
 -- | String type shortcut.
 tString :: Type v
-tString = TList tChar
+tString = TyList tChar
 
 
 -- show instances
@@ -105,22 +103,22 @@ instance (Eq v, Show v) => Show (Type v) where
   show = show' False
    where
     -- "syntax sugar" aliases
-    show' _p t               | t == tString = "string"           -- string  == [char]
-    show' _p t               | t == tBool   = "bool"             -- boolean == (unit | unit)
-    show' _p (TBin TSum u b) | u == tUnit = show' True b ++ "?"  -- maybe b == (unit | b)
+    show' _ t                 | t == tString = "string"           -- string  == [char]
+    show' _ t                 | t == tBool   = "bool"             -- boolean == (unit | unit)
+    show' _ (TyBin TySum u b) | u == tUnit = show' True b ++ "?"  -- maybe b == (unit | b)
     -- non-sugared rendering
-    show' _p (TAtom s)    = show s
-    show' _p (TList a)    = "[" ++ show' True a ++ "]"
-    show' _p (TVar v)     = '%' : show v
-    show' p (TBin c a b) = parF $ show' pl a ++ t_op c ++ show' pr b
+    show' _ (TyAtom s)    = show s
+    show' _ (TyList a)    = "[" ++ show' True a ++ "]"
+    show' _ (TyVar v)     = '%' : show v
+    show' p (TyBin c a b) = parF $ show' pl a ++ t_op c ++ show' pr b
       where
-        parF = case (p, c) of (False, TProd) -> id; _ -> parens
-        p' TFunc = (False, False)
-        p' TProd = (False, True)
-        p' TSum  = (True, True)
-        (pl, pr) = p' c
+        parF = case (p, c) of (False, TyProd) -> id; _ -> parens
+        p' TyFunc = (False, False)
+        p' TyProd = (False, True)
+        p' TySum  = (True, True)
+        (pl, pr)  = p' c
         parens str = "(" ++ str ++ ")"
-        t_op cc = case cc of TSum -> " | "; TProd -> ", "; TFunc -> " -> "
+        t_op cc = case cc of TySum -> " | "; TyProd -> ", "; TyFunc -> " -> "
 
 instance (Eq v, Show v) => Show (Row v) where
   show (Row xs) = "[[" ++ show (reverse xs) ++ ">>"

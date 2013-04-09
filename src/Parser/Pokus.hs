@@ -9,6 +9,7 @@ import Builtins.Builtins()
 import Builtins.Table
 
 import Data.Char
+import Text.Printf
 import Text.Parsec hiding (many, (<|>))
 import Control.Applicative
 import qualified Data.Map as M
@@ -41,5 +42,9 @@ testparse str =
         Left err  -> putStrLn (show err)
         Right ste -> printFuncs ste >> putStrLn "-----------------" >> printStack ste
 
-printFuncs (PState st _ _) = mapM_ putStrLn [ show n ++ " = " ++ show d | (n, FDUser d) <- M.toList st]
+printFuncs :: PState Meta -> IO ()
+printFuncs (PState st _ _) = sequence_ [ printFunc n f | (n, f@(FDUser _ _)) <- M.toList st]
+printFunc  n (FDUser  t d) = printFunc' n t (show d)
+printFunc  n (FDBuiltIn b) = printFunc' n undefined "<built-in>"
+printFunc' n t d = printf "%-10s : %-20s = %s\n" (show n) ("<show t>") d
 printStack (PState _ _ (Stack stk)) = mapM_ (putStrLn . show) stk

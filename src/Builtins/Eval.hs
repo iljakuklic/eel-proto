@@ -22,15 +22,15 @@ instance Evaluable FunctionCall where
 
 -- function definition
 instance Evaluable (FunctionDef m) where
-    eval (FDBuiltIn bi) = eval bi
-    eval (FDUser  term) = eval term
+    eval (FDBuiltIn  bi) = eval bi
+    eval (FDUser _ term) = eval term
 
 -- builtin invokation
 instance Evaluable BuiltIn where
     eval BIlet = error "Let not implemented"
     eval BIdef = do
         name <- pop; TQuot _ body <- pop
-        addFunc (Symbol $ termToString name) (FDUser body)
+        addFunc (Symbol $ termToString name) (FDUser (error "Type inference!") body)
     eval BIfix = do
         funq@(TQuot _ fun) <- pop
         push (TQuot () $ TComp () funq $ TFunc () $ FCBuiltIn BIfix)
