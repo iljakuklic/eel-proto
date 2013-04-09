@@ -32,7 +32,8 @@ pchr  = TChar () <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape s
 psymb = Symbol <$> ((:) <$> satisfy isAlpha <*> many alphaNum)
 peval = () <$ many (pfunc >>= eval)
 ptop  = skip >> peval >> eof >> getState
-skip  = many ((space >> return ()) <|> (try (string "//") >> (anyChar `manyTill` ((char '\n' >> return ()) <|> eof)) >> return ()))
+skip  = many ((space >> return ()) <|> (try (string "//") >> (anyChar `manyTill` eol) >> return ()))
+eol   = (char '\n' >> return ()) <|> eof
 
 
 testparse str =
