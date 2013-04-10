@@ -29,10 +29,10 @@ instance TyVars Symbol  where genTyVars = genSymbols
 -- | Type variable substitution
 subst sm t = subst' t
   where
-    subst' a@(TAtom _)  = a
-    subst' v@(TVar n)   = maybe v id (M.lookup n sm)
-    subst' (TBin b x y) = TBin b (subst' x) (subst' y)
-    subst' (TList x)    = TList (subst' x)
+    subst' a@(TyAtom _)  = a
+    subst' v@(TyVar n)   = maybe v id (M.lookup n sm)
+    subst' (TyBin b x y) = TyBin b (subst' x) (subst' y)
+    subst' (TyList x)    = TyList (subst' x)
 
 -- | Substitution composition
 substComp s1 s2 = (M.union s2 (fmap (subst s2) s1))
@@ -40,12 +40,12 @@ substComp s1 s2 = (M.union s2 (fmap (subst s2) s1))
 -- | Type unification
 --unify :: (Ord v, MonadError (TypeError v) m) => Type v -> Type v -> m (M.Map v (Type v))
 unify u v | u == v = return M.empty
-unify (TVar v) t = if v `notElem` t
+unify (TyVar v) t = if v `notElem` t
     then return (M.singleton v t)
     else throwError (SEOccurs v t)
-unify t v@(TVar _) = unify v t
-unify (TList u) (TList v) = unify u v
-unify (TBin u a b) (TBin v c d) | u == v = do
+unify t v@(TyVar _) = unify v t
+unify (TyList u) (TyList v) = unify u v
+unify (TyBin u a b) (TyBin v c d) | u == v = do
     s1 <- unify a c
     s2 <- unify (subst s1 b) (subst s1 d)
     return (substComp s1 s2)
@@ -56,24 +56,24 @@ unCollide t1 t2 = subst sm t2
   where
     collisions = intersect (toList t1) (toList t2)
     used       = union (toList t1) (toList t2)
-    availVars  = [ TVar v | v <- genTyVars, v `notElem` used ]
+    availVars  = [ TyVar v | v <- genTyVars, v `notElem` used ]
     sm         = M.fromList (zip collisions availVars)
 
 -- | rename type variables to nice names
-niceTyVars t = subst (M.fromList (zip (toListUniq t) (map TVar genTyVars))) t
-
--- | infer type of the empty function (= identity)
-inferEmpty = TBin TFunc a a
-    where a = TVar (head genTyVars)
+niceTyVars t = subst (M.fromList (zip (toListUniq t) (map TyVar genTyVars))) t
 
 -- | infer type of a quotation of the function f
-inferQuotation f = TBin TFunc v (TBin TProd v f)
-  where v = niceTyVars $ TVar (genTyVar f)
+inferQuotation f = TyBin TyFunc v (TyBin TyProd v f)
+  where v = niceTyVars $ TyVar (genTyVar f)
 
 -- | infer type of the function composition g'(f(x)), written f g'
-inferComposition f@(TBin TFunc a b) g' = do
+inferComposition f@(TyBin TyFunc a b) g' = do
     sm <- unify b c
-    return $ niceTyVars (TBin TFunc (subst sm a) (subst sm d))
+    return $ niceTyVars (TyBin TyFunc (subst sm a) (subst sm d))
   where
-    g@(TBin TFunc c d) = unCollide f g'
+    g@(TyBin TyFunc c d) = unCollide f g'
+
+-- | infer type of pushing argument to the stack
+inferPush t = let a = TyVar $ genTyVar t in a `tFunc` (a `tProd` t)
+
 
