@@ -6,7 +6,7 @@ module Sema.Types(
     -- * Type manipulation functions
     toListUniq, tyRow, isTypeMono, isRowMono,
     -- * Type representation smart constructors
-    tUnit, tChar, tProd, tFunc, tNum, tReal, tBool, tString, tMaybe
+    tUnit, tChar, tSum, tList, tProd, tFunc, tInt, tFloat, tBool, tString, tMaybe
   ) where
 
 import Sema.Common
@@ -68,22 +68,23 @@ tAtom name = TyAtom (Symbol name)
 tSum  = TyBin TySum
 tProd = TyBin TyProd
 tFunc = TyBin TyFunc
+tList = TyList
 
 -- | Unit type shortcut.
 tUnit :: Type v
-tUnit = tAtom "unit"
+tUnit = tAtom "U"
 
 -- | Integer type shortcut.
-tNum :: Type v
-tNum = tAtom "num"
+tInt :: Type v
+tInt = tAtom "I"
 
 -- | Real (float) type shortcut.
-tReal :: Type v
-tReal = tAtom "real"
+tFloat :: Type v
+tFloat = tAtom "F"
 
 -- | Character type shortcut.
 tChar :: Type v
-tChar = tAtom "char"
+tChar = tAtom "C"
 
 -- | Maybe type shortcut
 tMaybe :: Type v -> Type v
@@ -103,13 +104,13 @@ instance (Eq v, Show v) => Show (Type v) where
   show = show' False
    where
     -- "syntax sugar" aliases
-    show' _ t                 | t == tString = "string"           -- string  == [char]
-    show' _ t                 | t == tBool   = "bool"             -- boolean == (unit | unit)
+    show' _ t                 | t == tString = "S"           -- string  == [char]
+    show' _ t                 | t == tBool   = "B"             -- boolean == (unit | unit)
     show' _ (TyBin TySum u b) | u == tUnit = show' True b ++ "?"  -- maybe b == (unit | b)
     -- non-sugared rendering
     show' _ (TyAtom s)    = show s
     show' _ (TyList a)    = "[" ++ show' True a ++ "]"
-    show' _ (TyVar v)     = '%' : show v
+    show' _ (TyVar v)     = show v
     show' p (TyBin c a b) = parF $ show' pl a ++ t_op c ++ show' pr b
       where
         parF = case (p, c) of (False, TyProd) -> id; _ -> parens
