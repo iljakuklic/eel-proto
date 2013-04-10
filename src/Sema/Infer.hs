@@ -1,14 +1,15 @@
 
-module Sema.Infer {-(TypeError(..), subst, unify)-} where
+module Sema.Infer (infer) where
 
 import Sema.Types
 import Sema.Common
 import Sema.Error
+import Sema.Term
 
 import Prelude hiding (notElem, elem, maximum, concat)
 import qualified Data.Map as M
 import Control.Monad.Error
-import Control.Monad.State
+import Control.Applicative
 import Data.Foldable
 import Data.List hiding (notElem)
 
@@ -23,10 +24,13 @@ class TyVars v where
 -- | generate a new type variable not already included in given type expression
 genTyVar t = head [ v | v <- genTyVars, v `notElem` toList t ]
 
+ta = TyVar (genTyVar tUnit)
+
 instance TyVars Integer where genTyVars = [1..]
 instance TyVars Symbol  where genTyVars = genSymbols
 
 -- | Type variable substitution
+subst :: (Ord v) => Substitution v -> Type v -> Type v
 subst sm t = subst' t
   where
     subst' a@(TyAtom _)  = a
@@ -51,6 +55,9 @@ unify (TyBin u a b) (TyBin v c d) | u == v = do
     return (substComp s1 s2)
 unify t1 t2 = throwError (SEUnify t1 t2)
 
+-- | Unification applied to types
+typeUnify a b = fmap (flip subst a) (unify a b)
+
 -- | rename variables in t2 that collide with variable names in t1
 unCollide t1 t2 = subst sm t2
   where
@@ -68,12 +75,20 @@ inferQuotation f = TyBin TyFunc v (TyBin TyProd v f)
 
 -- | infer type of the function composition g'(f(x)), written f g'
 inferComposition f@(TyBin TyFunc a b) g' = do
+    let (TyBin TyFunc c d) = unCollide f g'
     sm <- unify b c
     return $ niceTyVars (TyBin TyFunc (subst sm a) (subst sm d))
-  where
-    g@(TyBin TyFunc c d) = unCollide f g'
+inferComposition _ _ = error "Invalit composition inference"
 
--- | infer type of pushing argument to the stack
-inferPush t = let a = TyVar $ genTyVar t in a `tFunc` (a `tProd` t)
-
-
+-- | Main type inference engine
+infer _ (TUnit _)    = return tUnit
+infer _ (TInt  _ _)  = return tInt
+infer _ (TChar _ _)  = return tChar
+infer _ (TFloat _ _) = return tFloat
+infer env (TList _ xs) = tList <$> (mapM (infer env) xs >>= foldM typeUnify ta)
+infer env (TQuot _ f)  = inferQuotation <$> (infer env f)
+infer env (TComp _ f g) = join (inferComposition <$> infer env f <*> infer env g)
+infer env (TPair _ a b) = tProd <$> infer env a <*> infer env b
+infer env (TSumA _ a)   = tSum <$> infer env a <*> pure (TyVar $ genTyVar ta)
+infer env (TSumB _ b)   = tSum (TyVar $ genTyVar ta) <$> infer env b
+infer env (TFunc _ f)  = maybe (throwError $ SESymbol f) return (lookup f env)

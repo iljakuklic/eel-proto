@@ -3,6 +3,7 @@ module Builtins.Eval (eval) where
 
 import Sema.Term
 import Sema.Common
+import Sema.Infer
 import Parser.State
 import Backend.Eval
 import Builtins.Conversions
@@ -11,7 +12,7 @@ import Data.Char
 
 -- term evaluation
 instance Evaluable (Term m) where
-    eval (TFunc _ f) = eval f
+    eval (TFunc _ f) = lookupFunc f >>= eval
     eval (TComp _ f g) = eval f >> eval g
     eval q = push (fmap (const ()) q)
 
@@ -29,11 +30,11 @@ instance Evaluable (FunctionDef m) where
 instance Evaluable BuiltIn where
     eval BIlet = error "Let not implemented"
     eval BIdef = do
-        name <- pop; TQuot _ body <- pop
-        addFunc (Symbol $ termToString name) (FDUser (error "Type inference!") body)
+        name <- pop; TQuot _ body <- pop; env <- pTypeTable; typ <- undefined -- infer env body
+        addFunc (Symbol $ termToString name) (FDUser typ body)
     eval BIfix = do
         funq@(TQuot _ fun) <- pop
-        push (TQuot () $ TComp () funq $ TFunc () $ FCBuiltIn BIfix)
+        push (TQuot () . TComp () funq . TFunc () $ Symbol "fix")
         eval fun
     eval BIdip = do TQuot _ f <- pop; x <- pop; eval f; push x
     eval BIsel = do

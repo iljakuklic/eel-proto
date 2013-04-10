@@ -2,7 +2,7 @@
 module Sema.Term (
         Term(..), FunctionCall(..), FunctionDef(..), BuiltIn(..),
         SymTable, Stack(..),
-        getMeta, onStack
+        getMeta, onStack, functionType
     ) where
 
 import qualified Data.Map as M
@@ -10,10 +10,11 @@ import qualified Data.Map as M
 import Sema.Common
 import Sema.Types
 import Builtins.Builtins
+import Builtins.Types
 
 -- | Term Representation
 data Term m
-     = TFunc  m (FunctionCall)      -- ^ function invokation
+     = TFunc  m (Symbol)            -- ^ function invokation
      | TComp  m (Term m) (Term m)   -- ^ function composition
      | TQuot  m (Term m)            -- ^ anonymous function quotation
      | TInt   m Int                 -- ^ integer value
@@ -29,6 +30,7 @@ data Term m
 data FunctionCall
      = FCUser    Symbol    -- ^ user-defined function
      | FCBuiltIn BuiltIn   -- ^ built-in function
+     deriving (Eq)
 
 -- | function definition
 data FunctionDef m
@@ -53,6 +55,10 @@ getMeta (TSumB  m _)   = m
 getMeta (TPair  m _ _) = m
 getMeta (TList  m _)   = m
 getMeta (TUnit  m)     = m
+
+-- | get function type
+functionType (FDUser t _)  = t
+functionType (FDBuiltIn b) = builtInType b
 
 -- | perform a function on stack
 onStack f stk = Stack (f (let Stack s = stk in s))

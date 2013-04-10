@@ -54,7 +54,7 @@ data BuiltIn
      -- Compiler functions
      | BIdef           -- ^ define a function
      | BIlet           -- ^ let binding
-     deriving (Show, Bounded, Enum)
+     deriving (Show, Bounded, Enum, Eq)
 
 
 -- | get builtin name

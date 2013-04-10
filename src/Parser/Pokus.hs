@@ -23,8 +23,8 @@ ptok p = p <* skip
 pstok = ptok . string
 psbet a b = between (pstok a) (pstok b)
 pterm =  TComp () <$> pfunc <*> pterm
-     <|> pure (TFunc () (FCBuiltIn BIid))
-pfunc =  TFunc () <$> (ptok psymb >>= lookupFuncCall)
+     <|> pure (TFunc () (Symbol "id"))
+pfunc =  TFunc () <$> (ptok psymb >>= (\s -> s <$ lookupFunc s))
      <|> TQuot () <$> psbet "[" "]" pterm
      <|> TInt () . read <$> ptok (many1 digit)
      <|> psbet "'" "'" pstr

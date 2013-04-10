@@ -19,8 +19,10 @@ x = tProd
 (//) = tSum
 -- | Function helper
 (~~>) :: [Type a] -> [Type a] -> Type a
-a ~~> b = (row a) `tFunc` (row b)
-  where row (t:ts) = foldr (flip tProd) t (reverse ts)
+z ~~> y = (row z) `tFunc` (row y)
+  where
+    row (t:ts) = foldr (flip tProd) t (reverse ts)
+    row _ = error "Empty row!"
 
 -- | Unary function type
 unary t = [a, t] ~~> [a, t]

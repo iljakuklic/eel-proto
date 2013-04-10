@@ -1,7 +1,7 @@
 
 module Parser.State (
         PState(..), Meta,
-        lookupFunc, lookupFuncCall
+        lookupFunc, lookupFuncCall, pTypeTable
     ) where
 
 import Parser.Rule
@@ -28,6 +28,9 @@ data Meta = Meta {
     }
 -}
 type Meta = ()
+
+-- | get table mapping symbols to types
+pTypeTable = fmap functionType . pSymTable <$> getState
 
 -- | Symbol table lookup
 lookupFunc sym = do
