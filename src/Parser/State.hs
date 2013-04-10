@@ -1,7 +1,7 @@
 
 module Parser.State (
         PState(..), Meta,
-        lookupFunc, lookupFuncCall, pTypeTable
+        lookupFunc, pTypeTable
     ) where
 
 import Parser.Rule
@@ -38,10 +38,3 @@ lookupFunc sym = do
     case M.lookup sym st of
         Just fn -> return fn
         Nothing -> fail ("Not in scope: " ++ show sym)
-
--- | Lookup function and return function call
-lookupFuncCall sym = do
-    fd <- lookupFunc sym
-    return $ case fd of
-        FDUser _ _   -> FCUser sym
-        FDBuiltIn bi -> FCBuiltIn bi

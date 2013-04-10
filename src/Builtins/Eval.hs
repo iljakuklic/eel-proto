@@ -16,11 +16,6 @@ instance Evaluable (Term m) where
     eval (TComp _ f g) = eval f >> eval g
     eval q = push (fmap (const ()) q)
 
--- function invokation
-instance Evaluable FunctionCall where
-    eval (FCBuiltIn b) = eval b
-    eval (FCUser fn)   = lookupFunc fn >>= eval
-
 -- function definition
 instance Evaluable (FunctionDef m) where
     eval (FDBuiltIn  bi) = eval bi
@@ -30,8 +25,8 @@ instance Evaluable (FunctionDef m) where
 instance Evaluable BuiltIn where
     eval BIlet = error "Let not implemented"
     eval BIdef = do
-        name <- pop; TQuot _ body <- pop; env <- pTypeTable; typ <- undefined -- infer env body
-        addFunc (Symbol $ termToString name) (FDUser typ body)
+        name <- pop; TQuot _ body <- pop; env <- pTypeTable; -- ftype <- infer env body
+        addFunc (Symbol $ termToString name) (FDUser (error "infer types") body)
     eval BIfix = do
         funq@(TQuot _ fun) <- pop
         push (TQuot () . TComp () funq . TFunc () $ Symbol "fix")

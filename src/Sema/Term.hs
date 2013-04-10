@@ -1,6 +1,6 @@
 
 module Sema.Term (
-        Term(..), FunctionCall(..), FunctionDef(..), BuiltIn(..),
+        Term(..), FunctionDef(..), BuiltIn(..),
         SymTable, Stack(..),
         getMeta, onStack, functionType
     ) where
@@ -25,12 +25,6 @@ data Term m
      | TPair  m (Term m) (Term m)   -- ^ product value
      | TList  m [Term m]            -- ^ list of values
      | TUnit  m                     -- ^ unit type value
-
--- | function invokation
-data FunctionCall
-     = FCUser    Symbol    -- ^ user-defined function
-     | FCBuiltIn BuiltIn   -- ^ built-in function
-     deriving (Eq)
 
 -- | function definition
 data FunctionDef m
@@ -88,10 +82,6 @@ instance Functor Term where
     fmap f (TPair  m a b) = TPair  (f m) (fmap f a) (fmap f b)
     fmap f (TList  m as)  = TList  (f m) (fmap (fmap f) as)
     fmap f (TUnit  m)     = TUnit  (f m)
-
-instance Show FunctionCall where
-    show (FCUser s)    = show s
-    show (FCBuiltIn b) = show b
 
 instance Show Stack where
     show (Stack s) = "$" ++ show (reverse s) ++ "$"
