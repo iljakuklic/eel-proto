@@ -58,16 +58,17 @@ functionType (FDBuiltIn b) = builtInType b
 onStack f stk = Stack (f (let Stack s = stk in s))
 
 instance Show (Term m) where
+    show (TFunc  _ (Symbol "id"))   = ""
     show (TFunc  _ f)   = show f
     show (TComp  _ f g) = show f ++ " " ++ show g
-    show (TQuot  _ q)   = "[" ++ show q ++ "]"
+    show (TQuot  _ q)   = "[ " ++ show q ++ "]"
     show (TInt   _ x)   = show x
     show (TFloat _ x)   = show x
     show (TChar  _ x)   = show x
     show (TSumA  _ x)   = "(A:" ++ show x ++ ")"
     show (TSumB  _ x)   = "(B:" ++ show x ++ ")"
     show (TPair  _ a b) = "({" ++ show a ++ "," ++ show b ++ "})"
-    show (TList  _ xs)  = "([" ++ tail (init (show xs)) ++ "])"
+    show (TList  _ xs)  = "("  ++ show xs ++ ")"
     show (TUnit  _)     = "#"
 
 instance Functor Term where

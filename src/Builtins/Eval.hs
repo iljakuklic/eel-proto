@@ -25,8 +25,10 @@ instance Evaluable (FunctionDef m) where
 instance Evaluable BuiltIn where
     eval BIlet = error "Let not implemented"
     eval BIdef = do
-        name <- pop; TQuot _ body <- pop; env <- pTypeTable; -- ftype <- infer env body
-        addFunc (Symbol $ termToString name) (FDUser (error "infer types") body)
+        name <- pop; TQuot _ body <- pop; env <- pTypeTable;
+        case infer env body of
+            Left err -> fail ("ERROR while inferring type for '" ++ termToString name ++ "': " ++ show err)
+            Right ftype -> addFunc (Symbol $ termToString name) (FDUser (ftype) body)
     eval BIfix = do
         funq@(TQuot _ fun) <- pop
         push (TQuot () . TComp () funq . TFunc () $ Symbol "fix")
@@ -91,7 +93,7 @@ instance Evaluable BuiltIn where
         flt1op _op _                              = undefined
         cmpop x y s = res : s
             where res = case compare x y of
-                    EQ -> TSumA () (TUnit ())
-                    LT -> TSumB () (TSumA () (TUnit ()))
-                    GT -> TSumB () (TSumB () (TUnit ()))
+                    EQ -> TSumB () (TUnit ())
+                    LT -> TSumA () (TSumA () (TUnit ()))
+                    GT -> TSumA () (TSumB () (TUnit ()))
 

@@ -6,6 +6,7 @@ import Sema.Term
 import Parser.State
 import Sema.Common
 import Builtins.Builtins()
+import Builtins.Types
 import Builtins.Table
 
 import Data.Char
@@ -45,6 +46,6 @@ testparse str =
 printFuncs :: PState Meta -> IO ()
 printFuncs (PState st _ _) = sequence_ [ printFunc n f | (n, f@(FDUser _ _)) <- M.toList st]
 printFunc  n (FDUser  t d) = printFunc' n t (show d)
-printFunc  n (FDBuiltIn b) = printFunc' n undefined "<built-in>"
-printFunc' n t d = printf "%-10s : %-20s = %s\n" (show n) ("<show t>") d
+printFunc  n (FDBuiltIn b) = printFunc' n (builtInType b) "<built-in>"
+printFunc' n t d = printf "%-10s : %-50s = %s\n" (show n) (show t) d
 printStack (PState _ _ (Stack stk)) = mapM_ (putStrLn . show) stk

@@ -66,29 +66,33 @@ unCollide t1 t2 = subst sm t2
     availVars  = [ TyVar v | v <- genTyVars, v `notElem` used ]
     sm         = M.fromList (zip collisions availVars)
 
+-- | uncollide over types
+unCollideT f t1 t2 = f t1 (unCollide t1 t2)
+
 -- | rename type variables to nice names
 niceTyVars t = subst (M.fromList (zip (toListUniq t) (map TyVar genTyVars))) t
 
--- | infer type of a quotation of the function f
-inferQuotation f = TyBin TyFunc v (TyBin TyProd v f)
-  where v = niceTyVars $ TyVar (genTyVar f)
+-- | infer type of a literal being pushed to the stack
+inferLiteral t = niceTyVars (v `tFunc` (v `tProd` t))
+    where v = TyVar (genTyVar t)
 
 -- | infer type of the function composition g'(f(x)), written f g'
 inferComposition f@(TyBin TyFunc a b) g' = do
     let (TyBin TyFunc c d) = unCollide f g'
     sm <- unify b c
     return $ niceTyVars (TyBin TyFunc (subst sm a) (subst sm d))
-inferComposition _ _ = error "Invalit composition inference"
+inferComposition _ _ = error "Invalid composition inference"
 
 -- | Main type inference engine
-infer _ (TUnit _)    = return tUnit
-infer _ (TInt  _ _)  = return tInt
-infer _ (TChar _ _)  = return tChar
-infer _ (TFloat _ _) = return tFloat
-infer env (TList _ xs) = tList <$> (mapM (infer env) xs >>= foldM typeUnify ta)
-infer env (TQuot _ f)  = inferQuotation <$> (infer env f)
+infer _ (TUnit _)    = return (inferLiteral tUnit)
+infer _ (TInt  _ _)  = return (inferLiteral tInt)
+infer _ (TChar _ _)  = return (inferLiteral tChar)
+infer _ (TFloat _ _) = return (inferLiteral tFloat)
+infer env (TList _ xs)  = inferLiteral . tList <$> (mapM (infer env) xs >>= foldM typeUnify ta)
+infer env (TQuot _ f)   = inferLiteral <$> (infer env f)
 infer env (TComp _ f g) = join (inferComposition <$> infer env f <*> infer env g)
-infer env (TPair _ a b) = tProd <$> infer env a <*> infer env b
-infer env (TSumA _ a)   = tSum <$> infer env a <*> pure (TyVar $ genTyVar ta)
-infer env (TSumB _ b)   = tSum (TyVar $ genTyVar ta) <$> infer env b
-infer env (TFunc _ f)  = maybe (throwError $ SESymbol f) return (lookup f env)
+infer env (TPair _ a b) = inferLiteral <$> (unCollideT tProd <$> infer env a <*> infer env b)
+infer env (TSumA _ a)   = inferLiteral <$> (tSum <$> infer env a <*> pure (TyVar $ genTyVar ta))
+infer env (TSumB _ b)   = inferLiteral <$> (tSum (TyVar $ genTyVar ta) <$> infer env b)
+infer env (TFunc _ f)   = maybe (throwError $ SESymbol f) return (M.lookup f env)
+-- TODO inferLiterals for sums, products

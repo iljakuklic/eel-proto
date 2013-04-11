@@ -4,6 +4,8 @@ module Compiler(Settings(..), InputSpec(..), runCompiler) where
 import Parser.Pokus
 import Parser.State
 import Sema.Term(Stack(Stack))
+import Control.Applicative
+import Sema.Infer
 
 import Prelude hiding (catch)
 import Control.Monad
@@ -58,15 +60,21 @@ repl n ste = do
             ":q"      -> quit
             ":quit"   -> quit
             ":exit"   -> quit
+            ':':'t':' ':term -> do
+                case runParser (skip >> (infer <$> pTypeTable <*> pterm)) ste "<repl>" term of
+                    Left err -> printErr err
+                    Right (Left err) -> printErr err
+                    Right (Right ty) -> putStrLn (show ty)
+                continue ste
             ":clear"  -> continue (ste { pStack = Stack []})
             ":ls"     -> printFuncs ste >> continue ste
             line      -> do
                 let parser' = fmap (flip setSourceLine n) getPosition >>= setPosition >> ptop
                 ste'' <- case runParser parser' ste "<repl>" line of
-                    Left err   -> hPutStrLn stderr ("ERROR: " ++ show err) >> return ste
+                    Left err   -> printErr err >> return ste
                     Right ste' -> (putStrLn $ show $ pStack ste') >> return ste'
                 continue ste''
-
+  where printErr s = hPutStrLn stderr ("ERROR: " ++ show s)
 -- | Read specified input
 readIn :: InputSpec -> IO (String, String)
 readIn (InputFile path) = do

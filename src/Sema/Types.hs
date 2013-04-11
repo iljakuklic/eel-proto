@@ -88,7 +88,7 @@ tChar = tAtom "C"
 
 -- | Maybe type shortcut
 tMaybe :: Type v -> Type v
-tMaybe t = tSum tUnit t
+tMaybe t = tSum t tUnit
 
 -- | Boolean type shortcut.
 tBool :: Type v
@@ -96,7 +96,7 @@ tBool = tMaybe tUnit
 
 -- | String type shortcut.
 tString :: Type v
-tString = TyList tChar
+tString = tList tChar
 
 
 -- show instances
@@ -106,7 +106,7 @@ instance (Eq v, Show v) => Show (Type v) where
     -- "syntax sugar" aliases
     show' _ t                 | t == tString = "S"           -- string  == [char]
     show' _ t                 | t == tBool   = "B"             -- boolean == (unit | unit)
-    show' _ (TyBin TySum u b) | u == tUnit = show' True b ++ "?"  -- maybe b == (unit | b)
+    show' _ (TyBin TySum b u) | u == tUnit = show' True b ++ "?"  -- maybe b == (b | unit)
     -- non-sugared rendering
     show' _ (TyAtom s)    = show s
     show' _ (TyList a)    = "[" ++ show' True a ++ "]"
