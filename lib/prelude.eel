@@ -1,21 +1,20 @@
 
-// TYPE UTILS
-
-// poor-mans type cast
-[ id2 zap ] 'typeas' def
-
 // COMBINATORS and STACK MANIPULATORS
 
 // swap two top positions
 [ qot dip ] 'swap' def
 // swap 2nd and 3rd items on the stack
 [ [ swap ] dip ] 'swapd' def
-// place top to the 3rd pos
+// duplicate 2 items
+[ [ dup ] dip dup [ swap ] dip ] 'dup2' def
+// duplicate 2nd item
+[ [ dup ] dip swap ] 'dup2nd' def
+// bury top item deep
 [ swap swapd ] 'bury' def
-// place top to th 4th position
-[ swap [bury] dip ] 'bury4' def
-// place 3rd item to the top
+[ swap [bury] dip ] 'bury3' def
+// dig item to the top
 [ swapd swap ] 'dig' def
+[ [ dig ] dip swap ] 'dig3' def
 // drop 2 top elements
 [ zap zap ] 'zap2' def
 // apply a function to the stack
@@ -30,12 +29,23 @@
 [ swap cat ] 'tac' def
 // zap in quotation
 [ [ zap ] tac ] 'zapq' def
+// partial application
+[ qot swap cat ] 'papply' def
+// swap top two arguments of a quotation
+[ [ swap ] tac ] 'flip' def
+
+// UTILITIES
+
+// poor-mans type cast
+[ id2 zap ] 'typeas' def
+// infinite loop (unifies with anything)
+[ [ i ] fix ] 'undefined' def
+
+// UNIT TYPE
 // remove unit
 [ unit typeas zap ] 'ununit' def
 // remove unit in a quotation
 [ [ ununit ] tac ] 'ununitq' def
-// partial application
-[ qot swap cat ] 'papply' def
 
 // SUM TYPE
 
@@ -87,25 +97,34 @@
 // nil test
 [ listu sbool ] 'isnil' def
 // left-associative list catamorphism
-//[ dig [ bury4 [ [ dig keep swap dig ] dip swap i ] [ [ zap2 ] dip ] unlist ] fix ] 'fold' def
+[ [ flip ] dip swap [ dig3 [ [ bury [ keep ] dip ] dip swap [ bury ] dip i ] [ zap2 ] unlist ] fix ] 'fold' def
 // list reversal
-//[ [ swap cons ] nil fold ] 'reverse' def
+[ [ cons ] nil fold ] 'reverse' def
 // right-associative list catamorphism
-//[ [ reverse ] dip2 fold ] 'rfold' def
+[ [ reverse ] dip2 fold ] 'rfold' def
 // list endofunctor
-//[ [ swap cons ] cat nil rfold ] 'map' def
+[ qot [dip cons] cat nil rfold ] 'lmap' def
+// list concatenation
+[ [cons] swap rfold ] 'concat' def
+// list filtering
+[ qot [ [ dup ] dip ] tac [ dip2 dig [ cons ] [ [ zap ] dip ] ifelse ] cat nil rfold ] 'filter' def
+// list generator
+[ [ [ keep ] dip dig [ [ i ] dip swap cons ] [ zap2 nil ] maybe ] fix ] 'unfold' def
 
 // special folds
-//[ [ add ] 0 fold ] 'sum' def
-//[ [ mul ] 1 fold ] 'product' def
-//[ [ zap 1 add ] 0 fold ] 'length' def
-//[ map [ and ] true fold ] 'all' def
-//[ map [ or ] false fold ] 'any' def
+[ [ add ] 0 fold ] 'sum' def
+[ [ mul ] 1 fold ] 'product' def
+[ [ swap zap 1 add ] 0 fold ] 'length' def
+[ lmap [ and ] true fold ] 'all' def
+[ lmap [ or ] false fold ] 'any' def
 
 // ORDERING
 
 // A B [A<B case] [A=B case] [A>B case] uncmp
 [ swap [ qot [ qot ] dip cat [ ifelse ] cat ] dip maybe ] 'uncmp' def
+// compare keeping the operands on the stack
+[ dup2 cmp ] 'cmpk' def
+[ dup2 fcmp ] 'fcmpk' def
 // comparisons
 [ [ true  ] [ false ] [ false ] uncmp ] 'lt' def
 [ [ false ] [ true  ] [ false ] uncmp ] 'eq' def
@@ -127,3 +146,9 @@
 [ getb at2 ] 'at3' def
 [ getb at3 ] 'at4' def
 
+// INTEGERS
+
+// increment
+[ 1 add ] 'inc' def
+// generate list range
+[ [ cmpk le [ dup2nd just [ inc ] dip2 ] [ nothing ] ifelse ] unfold [ zap2 ] dip ] 'range' def
