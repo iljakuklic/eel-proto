@@ -86,38 +86,6 @@
 // logical sum
 [ [ zap true ] ifthen ] 'or' def
 
-// LISTS
-
-// nil constructor
-[ unit inb listw ] 'nil' def
-// cons constructor
-[ pair ina listw ] 'cons' def
-// deconstructor
-[ [ [ listu ] dip [ unpair ] tac ] dip maybe ] 'unlist' def
-// nil test
-[ listu sbool ] 'isnil' def
-// left-associative list catamorphism
-[ [ flip ] dip swap [ dig3 [ [ bury [ keep ] dip ] dip swap [ bury ] dip i ] [ zap2 ] unlist ] fix ] 'fold' def
-// list reversal
-[ [ cons ] nil fold ] 'reverse' def
-// right-associative list catamorphism
-[ [ reverse ] dip2 fold ] 'rfold' def
-// list endofunctor
-[ qot [dip cons] cat nil rfold ] 'lmap' def
-// list concatenation
-[ [cons] swap rfold ] 'concat' def
-// list filtering
-[ qot [ [ dup ] dip ] tac [ dip2 dig [ cons ] [ [ zap ] dip ] ifelse ] cat nil rfold ] 'filter' def
-// list generator
-[ [ [ keep ] dip dig [ [ i ] dip swap cons ] [ zap2 nil ] maybe ] fix ] 'unfold' def
-
-// special folds
-[ [ add ] 0 fold ] 'sum' def
-[ [ mul ] 1 fold ] 'product' def
-[ [ swap zap 1 add ] 0 fold ] 'length' def
-[ lmap [ and ] true fold ] 'all' def
-[ lmap [ or ] false fold ] 'any' def
-
 // ORDERING
 
 // A B [A<B case] [A=B case] [A>B case] uncmp
@@ -146,9 +114,53 @@
 [ getb at2 ] 'at3' def
 [ getb at3 ] 'at4' def
 
+// LISTS
+
+// nil constructor
+[ unit inb listw ] 'nil' def
+// cons constructor
+[ pair ina listw ] 'cons' def
+// deconstructor
+[ [ [ listu ] dip [ unpair ] tac ] dip maybe ] 'unlist' def
+// nil test
+[ listu sbool ] 'isnil' def
+// head, tail
+[ listu [ geta ] smap ] 'head' def
+[ listu [ getb ] smap ] 'tail' def
+// left-associative list catamorphism
+[ [ flip ] dip swap [ dig3 [ [ bury [ keep ] dip ] dip swap [ bury ] dip i ] [ zap2 ] unlist ] fix ] 'fold' def
+// list reversal
+[ [ cons ] nil fold ] 'reverse' def
+// right-associative list catamorphism
+[ [ reverse ] dip2 fold ] 'rfold' def
+// list endofunctor
+[ qot [dip cons] cat nil rfold ] 'lmap' def
+// list concatenation
+[ [cons] swap rfold ] 'concat' def
+// list filtering
+[ qot [ [ dup ] dip ] tac [ dip2 dig [ cons ] [ [ zap ] dip ] ifelse ] cat nil rfold ] 'filter' def
+// list generator
+[ [ [ keep ] dip dig [ [ i ] dip swap cons ] [ zap2 nil ] maybe ] fix ] 'unfold' def
+// extract n-th element
+[ reverse [ zap dup 0 cmp eq [ 1 sub ] dip ] filter head [ zap ] dip ] 'nth' def
+
+// special folds
+[ [ add ] 0 fold ] 'sum' def
+[ [ mul ] 1 fold ] 'product' def
+[ [ swap zap 1 add ] 0 fold ] 'length' def
+[ lmap [ and ] true fold ] 'all' def
+[ lmap [ or ] false fold ] 'any' def
+
 // INTEGERS
 
-// increment
+// increment, decrement, negate, modulo
 [ 1 add ] 'inc' def
+[ 1 sub ] 'dec' def
+[ 0 swap sub ] 'neg' def
+[ dup2 div dup [ mul sub ] dip swap ] 'divmod' def
+[ divmod swap zap ] 'mod' def
+// absolute value, signum
+[ dup 0 cmp lt [ neg ] ifthen ] 'abs' def
+[ 0 cmp [ 1 neg ] [ 0 ] [ 1 ] uncmp ] 'sgn' def
 // generate list range
 [ [ cmpk le [ dup2nd just [ inc ] dip2 ] [ nothing ] ifelse ] unfold [ zap2 ] dip ] 'range' def
