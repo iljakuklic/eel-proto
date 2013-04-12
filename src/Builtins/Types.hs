@@ -58,13 +58,13 @@ builtInType BIadd    = binary tInt
 builtInType BIsub    = binary tInt
 builtInType BImul    = binary tInt
 builtInType BIdiv    = binary tInt
-builtInType BIcmp    = [a, tInt] ~~> [a, tMaybe tBool]
+builtInType BIcmp    = [a, tInt, tInt] ~~> [a, tMaybe tBool]
 -- Floats
 builtInType BIfadd   = binary tFloat
 builtInType BIfsub   = binary tFloat
 builtInType BIfmul   = binary tFloat
 builtInType BIfdiv   = binary tFloat
-builtInType BIfcmp   = [a, tFloat] ~~> [a, tMaybe tBool]
+builtInType BIfcmp   = [a, tFloat, tFloat] ~~> [a, tMaybe tBool]
 builtInType BIfsin   = unary tFloat
 builtInType BIfpow   = unary tFloat
 builtInType BIflog   = unary tFloat
