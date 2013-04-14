@@ -66,7 +66,7 @@ builtInType BIfmul   = binary tFloat
 builtInType BIfdiv   = binary tFloat
 builtInType BIfcmp   = [a, tFloat, tFloat] ~~> [a, tMaybe tBool]
 builtInType BIfsin   = unary tFloat
-builtInType BIfpow   = unary tFloat
+builtInType BIfpow   = binary tFloat
 builtInType BIflog   = unary tFloat
 -- Conversions
 builtInType BIfloor  = [a, tFloat] ~~> [a, tInt]
