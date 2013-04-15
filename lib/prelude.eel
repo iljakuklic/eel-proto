@@ -11,7 +11,7 @@
 [ [ dup ] dip swap ] 'dup2nd' def
 // bury top item deep
 [ swap swapd ] 'bury' def
-[ swap [bury] dip ] 'bury3' def
+[ swap [ bury ] dip ] 'bury3' def
 // dig item to the top
 [ swapd swap ] 'dig' def
 [ [ dig ] dip swap ] 'dig3' def
@@ -154,7 +154,7 @@
 // right-associative scan
 [ bury [ swap ] tac qot [ dip [ dup ] dip cons ] cat nil rfold [ zap ] dip ] 'rscan' def
 // list endofunctor
-[ qot [dip cons] cat nil rfold ] 'lmap' def
+[ qot [ dip cons ] cat nil rfold ] 'lmap' def
 // list concatenation
 [ [ cons ] swap rfold ] 'append' def
 [ swap append ] 'prepend' def
