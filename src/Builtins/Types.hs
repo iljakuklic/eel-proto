@@ -74,7 +74,7 @@ builtInType BIfloat  = [a, tInt] ~~> [a, tFloat]
 builtInType BIord    = [a, tChar] ~~> [a, tInt]
 builtInType BIchar   = [a, tInt] ~~> [a, tChar]
  -- IO builtins
-builtInType BIgetchar   = [a] ~~> [a, tChar]
+builtInType BIgetchar   = [a] ~~> [a, tMaybe tChar]
 builtInType BIputchar   = [a, tChar] ~~> [a]
 builtInType BIreadfile  = [a, tString] ~~> [a, tMaybe tString]
 builtInType BIwritefile = [a, tString, tString] ~~> [a, tBool]
