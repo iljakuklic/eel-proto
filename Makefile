@@ -21,7 +21,7 @@ eel: dist/build/eel/eel
 	cp $< $@
 
 repl: eel
-	rlwrap -S'>>> ' -pgreen ./eel -i
+	rlwrap -S'>>> ' -pgreen ./eel -i test/brainfuck.eel
 
 clean:
 	rm -f eel

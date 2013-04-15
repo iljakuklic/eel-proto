@@ -1,0 +1,11 @@
+
+
+[ inc ] 'bfi' def
+[ dec ] 'bfd' def
+[ swap [ swap ] [ nil 0 ] unlist [ swap cons ] dip2 ] 'bfl' def
+[ [ swap ] dip bfl [ swap ] dip ] 'bfr' def
+[ [ eqzero not ] while ] 'bfloop' def
+
+
+
+
