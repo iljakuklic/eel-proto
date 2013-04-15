@@ -27,4 +27,8 @@ clean:
 	rm -f eel
 	cabal clean
 
-.PHONY: clean top doc docs readdoc repl
+wc:
+	wc test/*.* lib/*.eel
+	wc src/*.hs src/*/*.hs
+
+.PHONY: clean top doc docs readdoc repl wc
