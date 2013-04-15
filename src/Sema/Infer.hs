@@ -1,5 +1,5 @@
 
-module Sema.Infer (infer) where
+module Sema.Infer (infer, inferVal) where
 
 import Sema.Types
 import Sema.Common
@@ -84,15 +84,19 @@ inferComposition f@(TyBin TyFunc a b) g' = do
 inferComposition _ _ = error "Invalid composition inference"
 
 -- | Main type inference engine
-infer _ (TUnit _)    = return (inferLiteral tUnit)
-infer _ (TInt  _ _)  = return (inferLiteral tInt)
-infer _ (TChar _ _)  = return (inferLiteral tChar)
-infer _ (TFloat _ _) = return (inferLiteral tFloat)
-infer env (TList _ xs)  = inferLiteral . tList <$> (mapM (infer env) xs >>= foldM typeUnify ta)
-infer env (TQuot _ f)   = inferLiteral <$> (infer env f)
 infer env (TComp _ f g) = join (inferComposition <$> infer env f <*> infer env g)
-infer env (TPair _ a b) = inferLiteral <$> (unCollideT tProd <$> infer env a <*> infer env b)
-infer env (TSumA _ a)   = inferLiteral <$> (tSum <$> infer env a <*> pure (TyVar $ genTyVar ta))
-infer env (TSumB _ b)   = inferLiteral <$> (tSum (TyVar $ genTyVar ta) <$> infer env b)
+infer env (TQuot _ f)   = inferLiteral <$> (infer env f)
 infer env (TFunc _ f)   = maybe (throwError $ SESymbol f) return (M.lookup f env)
--- TODO inferLiterals for sums, products
+infer env term          = inferLiteral <$> inferVal env term
+
+inferVal env f@(TQuot _ _)   = infer env f
+inferVal env f@(TFunc _ _)   = infer env f
+inferVal env f@(TComp _ _ _) = infer env f
+inferVal _ (TUnit _)    = return tUnit
+inferVal _ (TInt  _ _)  = return tInt
+inferVal _ (TChar _ _)  = return tChar
+inferVal _ (TFloat _ _) = return tFloat
+inferVal env (TList _ xs)  = tList <$> (mapM (inferVal env) xs >>= foldM typeUnify ta)
+inferVal env (TPair _ a b) = unCollideT tProd <$> inferVal env a <*> inferVal env b
+inferVal env (TSumA _ a)   = tSum <$> inferVal env a <*> pure (TyVar $ genTyVar ta)
+inferVal env (TSumB _ b)   = tSum (TyVar $ genTyVar ta) <$> inferVal env b
