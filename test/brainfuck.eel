@@ -5,7 +5,8 @@
 [ swap [ swap ] [ nil 0 ] unlist [ swap cons ] dip2 ] 'bfl' def
 [ [ swap ] dip bfl [ swap ] dip ] 'bfr' def
 [ [ eqzero not ] while ] 'bfloop' def
+[ nil nil 0 ] 'bftape' def
 
-
+[ [ bfi ] '+' def  [ bfd ] '-' def  [ bfr ] '>' def  [ bfl ] '<' def  [ bfloop ] 'o' def  ] 'bfdefs' def
 
 
