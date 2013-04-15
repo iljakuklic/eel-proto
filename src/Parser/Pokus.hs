@@ -25,13 +25,13 @@ pstok = ptok . string
 psbet a b = between (pstok a) (pstok b)
 pterm =  TComp () <$> pfunc <*> pterm
      <|> pure (TFunc () (Symbol "id"))
-pfunc =  TFunc () <$> (ptok psymb >>= (\s -> s <$ lookupFunc s))
+pfunc =  TInt () . read <$> ptok (many1 digit)
+     <|> TFunc () <$> (ptok psymb >>= (\s -> s <$ lookupFunc s))
      <|> TQuot () <$> psbet "[" "]" pterm
-     <|> TInt () . read <$> ptok (many1 digit)
      <|> psbet "'" "'" pstr
 pstr  = TList () <$> many pchr
 pchr  = TChar () <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape seqs
-psymb = Symbol <$> ((:) <$> satisfy isAlpha <*> many alphaNum)
+psymb = Symbol <$> many1 (satisfy (\c -> isAlpha c || c `elem` "0123456789+-*/.:&^%$#@!<>="))
 peval = () <$ many (pfunc >>= eval)
 ptop  = skip >> peval >> eof >> getState
 skip  = many ((space >> return ()) <|> (try (string "//") >> (anyChar `manyTill` eol) >> return ()))
