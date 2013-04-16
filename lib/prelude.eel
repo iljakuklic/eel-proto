@@ -173,6 +173,8 @@
     while zap reverse ] 'zipp' def
 // zip lists using a function
 [ [ zipp ] dip [ unpair ] tac lmap ] 'zip' def
+// monadic list binding
+[ lmap concat ] 'lbind' def
 
 
 // special folds
@@ -234,6 +236,10 @@
 [ 1 float 2 float fdiv fpow ] 'fsqrt' def
 // logarithm given a base
 [ swap [ flog ] bi fdiv ] 'flogb' def
+// absolute value
+[ dup 0 float fcmp le [ fneg ] ifthen ] 'fabs' def
+// approximate equality w.r.t. given epsilon
+[ [ fsub fabs ] dip fcmp le ] 'feq' def
 
 // STRING FUNCTIONS
 
