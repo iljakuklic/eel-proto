@@ -39,6 +39,15 @@ instance Traversable Type where
     traverse f (TyList t)    = TyList <$> traverse f t
     traverse f (TyBin t a b) = TyBin t <$> traverse f a <*> traverse f b
 
+instance Monad Type where
+    return = TyVar
+    t >>= f = tJoin (fmap f t)
+      where
+        tJoin (TyVar v)     = v
+        tJoin (TyAtom a)    = TyAtom a
+        tJoin (TyList t)    = TyList (tJoin t)
+        tJoin (TyBin t a b) = TyBin t (tJoin a) (tJoin b)
+
 -- forward row instances to list
 instance Functor  Row where fmap    f (Row xs) = Row $ (fmap . fmap) f xs
 instance Foldable Row where foldMap f (Row xs) = foldMap (foldMap f) xs

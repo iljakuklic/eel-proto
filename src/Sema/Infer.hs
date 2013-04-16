@@ -31,12 +31,7 @@ instance TyVars Symbol  where genTyVars = genSymbols
 
 -- | Type variable substitution
 subst :: (Ord v) => Substitution v -> Type v -> Type v
-subst sm t = subst' t
-  where
-    subst' a@(TyAtom _)  = a
-    subst' v@(TyVar n)   = maybe v id (M.lookup n sm)
-    subst' (TyBin b x y) = TyBin b (subst' x) (subst' y)
-    subst' (TyList x)    = TyList (subst' x)
+subst sm ty = ty >>= (\n -> maybe (TyVar n) id (M.lookup n sm))
 
 -- | Substitution composition
 substComp s1 s2 = (M.union s2 (fmap (subst s2) s1))
