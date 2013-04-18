@@ -5,8 +5,32 @@
 [ swap [ swap ] [ nil 0 ] unlist [ swap cons ] dip2 ] 'bfl' def
 [ [ swap ] dip bfl [ swap ] dip ] 'bfr' def
 [ [ eqzero not ] while ] 'bfloop' def
-[ nil nil 0 ] 'bftape' def
+[ nil [ swap cons ] nil nil 0 ] 'bftape' def
+[ dup [ bury [ swap keep ] dip2 ] dip ] 'bfwr' def
 
-[ [ bfi ] '+' def  [ bfd ] '-' def  [ bfr ] '>' def  [ bfl ] '<' def  [ bfloop ] 'o' def  ] 'bfdefs' def
+[ [ bfi ] '+' def  [ bfd ] '-' def  [ bfr ] '>' def  [ bfl ] '<' def  [ bfloop ] 'o' def  [ bfwr ] '.' def ] 'bfdefs' def
 
+//[
+//        + + + + +   + + + + +
+//        [
+//            >   + + + + +   + +
+//            >   + + + + +   + + + + +
+//            >   + + +
+//            >   +
+//            < < < <   -
+//        ] o
+//        >   + +   .
+//        >   +   .
+//        + + + + +   + +   .
+//        .
+//        + + +   .
+//        >   + +   .
+//        < <   + + + + +   + + + + +   + + + + +   .
+//        >   .
+//        + + +   .
+//        - - - - -   -   .
+//        - - - - -   - - -   .
+//        >   +   .
+//        >   .
+//] 'bfhello' def
 
