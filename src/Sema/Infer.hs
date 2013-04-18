@@ -79,11 +79,15 @@ inferComposition f@(TyBin TyFunc a b) g' = do
 inferComposition _ _ = error "Invalid composition inference"
 
 -- | Main type inference engine
-infer env (TComp _ f g) = join (inferComposition <$> infer env f <*> infer env g)
-infer env (TQuot _ f)   = inferLiteral <$> (infer env f)
-infer env (TFunc _ f)   = maybe (throwError $ SESymbol f) return (M.lookup f env)
-infer env term          = inferLiteral <$> inferVal env term
+infer = inferTerm
 
+-- | Infer the type of a term
+inferTerm env (TComp _ f g) = join (inferComposition <$> infer env f <*> infer env g)
+inferTerm env (TQuot _ f)   = inferLiteral <$> (infer env f)
+inferTerm env (TFunc _ f)   = maybe (throwError $ SESymbol f) return (M.lookup f env)
+inferTerm env term          = inferLiteral <$> inferVal env term
+
+-- | Infer the type of a stack value
 inferVal env f@(TQuot _ _)   = infer env f
 inferVal env f@(TFunc _ _)   = infer env f
 inferVal env f@(TComp _ _ _) = infer env f
