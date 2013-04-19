@@ -27,6 +27,8 @@ fun ph z y = tFunc ph (mkRow z) (mkRow y)
 z ~~> y = fun (TyVar . genTyVar . mkRow $ z ++ y) z y
 -- | Compile-time function helper
 z ~+> y = fun (TyPhase TyCompile) z y
+-- | Parse-time function helper
+z ~*> y = fun (TyPhase TyParse) z y
 -- | Unary function type
 unary t = [a, t] ~~> [a, t]
 -- | Binary function type
@@ -82,6 +84,6 @@ builtInType BIputchar   = [a, tChar] ~~> [a]
 builtInType BIreadfile  = [a, tString] ~~> [a, tMaybe tString]
 builtInType BIwritefile = [a, tString, tString] ~~> [a, tBool]
 -- Compiler funcs
-builtInType BIdef    = [a, [b] ~~> [c], tString] ~+> [a]
-builtInType BIlet    = [a, [b] ~~> [c], tString] ~+> [c]
+builtInType BIdef    = [a, fun e [b] [c], tString] ~+> [a]
+builtInType BIlet    = [a, fun e [b] [c], tString] ~+> [c]
 
