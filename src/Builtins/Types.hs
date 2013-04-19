@@ -12,18 +12,21 @@ a = var "a"
 b = var "b"
 c = var "c"
 d = var "d"
+e = var "e"
 r = var "r"
+-- | Row helper
+mkRow (t:ts) = foldr (flip tProd) t (reverse ts)
+mkRow _ = error "Empty row!"
 -- | Product helper
 x = tProd
 -- | Sum helper
 (//) = tSum
 -- | Function helper
-(~~>) :: [Type a] -> [Type a] -> Type a
-z ~~> y = (row z) `tFunc` (row y)
-  where
-    row (t:ts) = foldr (flip tProd) t (reverse ts)
-    row _ = error "Empty row!"
-
+fun ph z y = tFunc ph (mkRow z) (mkRow y)
+-- | Phase-polymorphic function helper
+z ~~> y = fun (TyVar . genTyVar . mkRow $ z ++ y) z y
+-- | Compile-time function helper
+z ~+> y = fun (TyPhase TyCompile) z y
 -- | Unary function type
 unary t = [a, t] ~~> [a, t]
 -- | Binary function type
@@ -34,13 +37,13 @@ builtInType :: BuiltIn -> Type Symbol
 
 -- Combinators
 builtInType BIid     = [a] ~~> [a]
-builtInType BIdip    = [a, b, [a] ~~> [c]] ~~> [c, b]
+builtInType BIdip    = fun d [a, b, fun d [a] [c]] [c, b]
 builtInType BIid2    = [a, b, b] ~~> [a, b, b]
 builtInType BIzap    = [a, b] ~~> [a]
 builtInType BIdup    = [a, b] ~~> [a, b, b]
-builtInType BIqot    = [a, b] ~~> [a, [c] ~~> [c, b]]
-builtInType BIcat    = [a, [b] ~~> [c], [c] ~~> [d]] ~~> [a, [b] ~~> [d]]
-builtInType BIfix    = [a, [a, [a] ~~> [b]] ~~> [b]] ~~> [b]
+builtInType BIqot    = [a, b] ~~> [a, fun d [c] [c, b]]
+builtInType BIcat    = [a, fun e [b] [c], fun e [c] [d]] ~~> [a, fun e [b] [d]]
+builtInType BIfix    = let t = var "e" in fun t [a, fun t [a, fun t [a] [b]] [b]] [b]
 -- Unit
 builtInType BIunit   = [a] ~~> [a, tUnit]
 -- Products
@@ -49,7 +52,7 @@ builtInType BIunpair = [a, b `x` c] ~~> [a, b, c]
 -- Sums
 builtInType BIina    = [r, a] ~~> [r, a // b]
 builtInType BIinb    = [r, b] ~~> [r, a // b]
-builtInType BIsel    = [r, a // b, [r, a] ~~> [c], [r, b] ~~> [c]] ~~> [c]
+builtInType BIsel    = fun e [r, a // b, fun e [r, a] [c], fun e [r, b] [c]] [c]
 -- Lists
 builtInType BIlistw  = [r, tMaybe (a `x` tList a)] ~~> [r, tList a]
 builtInType BIlistu  = [r, tList a] ~~> [r, tMaybe (a `x` tList a)]
@@ -79,6 +82,6 @@ builtInType BIputchar   = [a, tChar] ~~> [a]
 builtInType BIreadfile  = [a, tString] ~~> [a, tMaybe tString]
 builtInType BIwritefile = [a, tString, tString] ~~> [a, tBool]
 -- Compiler funcs
-builtInType BIdef    = [a, [b] ~~> [c], tString] ~~> [a]
-builtInType BIlet    = [a, [b] ~~> [c], tString] ~~> [c]
+builtInType BIdef    = [a, [b] ~~> [c], tString] ~+> [a]
+builtInType BIlet    = [a, [b] ~~> [c], tString] ~+> [c]
 

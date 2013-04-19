@@ -2,51 +2,76 @@
 
 module Sema.Types(
     -- * Data structures
-    Type(..), Type2(..), Row,
+    Type(..), Type2(..), TyPhaseEnum(..), Row,
     -- * Type manipulation functions
     toListUniq, tyRow, isTypeMono, isRowMono,
     -- * Type representation smart constructors
-    tUnit, tChar, tSum, tList, tProd, tFunc, tInt, tFloat, tBool, tString, tMaybe
+    tUnit, tChar, tSum, tList, tProd, tFunc, tInt, tFloat, tBool, tString, tMaybe,
+    -- * Helpers
+    TyVars, genTyVar, genTyVars
   ) where
 
 import Sema.Common
 
-import Prelude hiding (all)
+import Prelude hiding (all, notElem)
 import Data.Foldable
 import Data.Traversable
 import Control.Applicative
-import Data.List hiding (all)
+import Data.List hiding (all, notElem)
+
+
+-- | Type variable supply
+class TyVars v where
+    -- | List of all possible variable names
+    genTyVars :: [v]
+
+instance TyVars Integer where genTyVars = [1..]
+instance TyVars Symbol  where genTyVars = genSymbols
+
+-- | generate a new type variable not already included in given type expression
+genTyVar t = head [ v | v <- genTyVars, v `notElem` t ]
+
 
 -- | Type specification representation.
-data Type v = TyAtom Symbol                  -- ^ atomic type
-            | TyVar  v                       -- ^ type variable
-            | TyList (Type v)                -- ^ list type
-            | TyBin Type2 (Type v) (Type v)  -- ^ binary type
+data Type v = TyAtom Symbol                             -- ^ atomic type
+            | TyVar  v                                  -- ^ type variable
+            | TyList (Type v)                           -- ^ list type
+            | TyBin (Type2 (Type v)) (Type v) (Type v)  -- ^ binary type
+            | TyPhase TyPhaseEnum                       -- ^ phase type
             deriving Eq
 
+-- Phase Types
+data TyPhaseEnum = TyRun | TyCompile | TyParse deriving Eq
+
 -- | Compound type variants (sum, product, function)
-data Type2 = TySum | TyProd | TyFunc deriving Eq
+data Type2 v = TySum | TyProd | TyFunc v deriving Eq
 
 -- | Row is a list of types
 newtype Row v = Row [Type v] deriving (Eq)
 
+-- boring typeclass instances...
+
 instance Functor  Type where fmap    = fmapDefault
 instance Foldable Type where foldMap = foldMapDefault
-
 instance Traversable Type where
     traverse _ (TyAtom a)    = pure (TyAtom a)
     traverse f (TyVar v)     = TyVar <$> f v
     traverse f (TyList t)    = TyList <$> traverse f t
-    traverse f (TyBin t a b) = TyBin t <$> traverse f a <*> traverse f b
-
+    traverse f (TyBin t a b) = flip TyBin <$> traverse f a <*> (traverse (traverse f) t) <*> traverse f b
+    traverse _ (TyPhase p)   = pure (TyPhase p)
 instance Monad Type where
     return = TyVar
-    t >>= f = tJoin (fmap f t)
-      where
-        tJoin (TyVar v)     = v
-        tJoin (TyAtom a)    = TyAtom a
-        tJoin (TyList t)    = TyList (tJoin t)
-        tJoin (TyBin t a b) = TyBin t (tJoin a) (tJoin b)
+    (TyVar v)     >>= f = f v
+    (TyAtom a)    >>= _ = TyAtom a
+    (TyPhase p)   >>= _ = TyPhase p
+    (TyList t)    >>= f = TyList (t >>= f)
+    (TyBin t a b) >>= f = TyBin (fmap (>>= f) t) (a >>= f) (b >>= f)
+
+instance Functor Type2 where fmap = fmapDefault
+instance Foldable Type2 where foldMap = foldMapDefault
+instance Traversable Type2 where
+    traverse _ TySum = pure TySum; traverse _ TyProd = pure TyProd
+    traverse f (TyFunc ph) = TyFunc <$> f ph
 
 -- forward row instances to list
 instance Functor  Row where fmap    f (Row xs) = Row $ (fmap . fmap) f xs
@@ -76,7 +101,7 @@ tAtom name = TyAtom (Symbol name)
 
 tSum  = TyBin TySum
 tProd = TyBin TyProd
-tFunc = TyBin TyFunc
+tFunc ph = TyBin (TyFunc ph)
 tList = TyList
 
 -- | Unit type shortcut.
@@ -113,22 +138,25 @@ instance (Eq v, Show v) => Show (Type v) where
   show = show' False
    where
     -- "syntax sugar" aliases
-    show' _ t                 | t == tString = "S"           -- string  == [char]
-    show' _ t                 | t == tBool   = "B"             -- boolean == (unit | unit)
+    show' _ t                 | t == tString = "S"                -- string  == [char]
+    show' _ t                 | t == tBool   = "B"                -- boolean == (unit | unit)
     show' _ (TyBin TySum b u) | u == tUnit = show' True b ++ "?"  -- maybe b == (b | unit)
     -- non-sugared rendering
     show' _ (TyAtom s)    = show s
     show' _ (TyList a)    = "[" ++ show' True a ++ "]"
     show' _ (TyVar v)     = show v
+    show' _ (TyPhase TyRun)     = "-"
+    show' _ (TyPhase TyCompile) = "+"
+    show' _ (TyPhase TyParse)   = "*"
     show' p (TyBin c a b) = parF $ show' pl a ++ t_op c ++ show' pr b
       where
         parF = case (p, c) of (False, TyProd) -> id; _ -> parens
-        p' TyFunc = (False, False)
+        p' (TyFunc _) = (False, False)
         p' TyProd = (False, True)
-        p' TySum  = (True, True)
-        (pl, pr)  = p' c
+        p' TySum = (True, True)
+        (pl, pr) = p' c
         parens str = "(" ++ str ++ ")"
-        t_op cc = case cc of TySum -> " | "; TyProd -> ", "; TyFunc -> " -> "
+        t_op cc = case cc of TySum -> " | "; TyProd -> ", "; TyFunc ph -> " --" ++ show' False ph ++ "> "
 
 instance (Eq v, Show v) => Show (Row v) where
   show (Row xs) = "[[" ++ show (reverse xs) ++ ">>"
