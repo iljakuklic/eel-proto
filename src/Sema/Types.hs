@@ -57,7 +57,7 @@ instance Traversable Type where
     traverse _ (TyAtom a)    = pure (TyAtom a)
     traverse f (TyVar v)     = TyVar <$> f v
     traverse f (TyList t)    = TyList <$> traverse f t
-    traverse f (TyBin t a b) = flip TyBin <$> traverse f a <*> (traverse (traverse f) t) <*> traverse f b
+    traverse f (TyBin t a b) = flip TyBin <$> traverse f a <*> (traverse.traverse) f t <*> traverse f b
     traverse _ (TyPhase p)   = pure (TyPhase p)
 instance Monad Type where
     return = TyVar
