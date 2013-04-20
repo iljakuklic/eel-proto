@@ -4,3 +4,5 @@
 *.bc
 *.hi
 dist/
+eel
+Setup.hs
