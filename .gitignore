@@ -4,5 +4,5 @@
 *.bc
 *.hi
 dist/
+cabal-dev/
 eel
-Setup.hs
