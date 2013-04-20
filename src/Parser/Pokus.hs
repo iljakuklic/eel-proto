@@ -20,17 +20,19 @@ initSymTab = builtInsTable
 
 initState = PState { pSymTable = initSymTab, pRules = M.empty, pStack = Stack [] }
 
+e = mEps
+
 ptok p = p <* skip
 pstok = ptok . string
 psbet a b = between (pstok a) (pstok b)
-pterm =  TComp () <$> pfunc <*> pterm
-     <|> pure (TFunc () (Symbol "id"))
-pfunc =  TInt () . read <$> ptok (many1 digit)
-     <|> TFunc () <$> (ptok psymb >>= (\s -> s <$ lookupFunc s))
-     <|> TQuot () <$> psbet "[" "]" pterm
+pterm =  TComp e <$> pfunc <*> pterm
+     <|> pure (TFunc e (Symbol "id"))
+pfunc =  TInt e . read <$> ptok (many1 digit)
+     <|> TFunc e <$> (ptok psymb >>= (\s -> s <$ lookupFunc s))
+     <|> TQuot e <$> psbet "[" "]" pterm
      <|> psbet "'" "'" pstr
-pstr  = TList () <$> many pchr
-pchr  = TChar () <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape seqs
+pstr  = TList e <$> many pchr
+pchr  = TChar e <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape seqs
 psymb = Symbol <$> many1 (satisfy (\c -> isAlpha c || c `elem` "0123456789+-*/.:&^%$#@!<>="))
 peval = () <$ many (pfunc >>= eval)
 ptop  = skip >> peval >> eof >> getState

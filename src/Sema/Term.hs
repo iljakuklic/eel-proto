@@ -2,7 +2,8 @@
 module Sema.Term (
         Term(..), FunctionDef(..), BuiltIn(..),
         SymTable, Stack(..),
-        getMeta, onStack, functionType
+        getMeta, setMeta, modifyMeta,
+        onStack, functionType
     ) where
 
 import qualified Data.Map as M
@@ -34,8 +35,8 @@ data FunctionDef m
 
 -- | Symbol table
 type SymTable m = M.Map Symbol (FunctionDef m)
--- | Runtime stack
-newtype Stack   = Stack [Term ()]
+-- | Compile-time stack
+newtype Stack m = Stack [Term m]
 
 -- | get term metadata
 getMeta (TFunc  m _)   = m
@@ -49,6 +50,22 @@ getMeta (TSumB  m _)   = m
 getMeta (TPair  m _ _) = m
 getMeta (TList  m _)   = m
 getMeta (TUnit  m)     = m
+
+-- | set term metadata
+setMeta (TFunc  _ a)   m = TFunc  m a
+setMeta (TComp  _ a b) m = TComp  m a b
+setMeta (TQuot  _ a)   m = TQuot  m a
+setMeta (TInt   _ a)   m = TInt   m a
+setMeta (TFloat _ a)   m = TFloat m a
+setMeta (TChar  _ a)   m = TChar  m a
+setMeta (TSumA  _ a)   m = TSumA  m a
+setMeta (TSumB  _ a)   m = TSumB  m a
+setMeta (TPair  _ a b) m = TPair  m a b
+setMeta (TList  _ a)   m = TList  m a
+setMeta (TUnit  _)     m = TUnit  m
+
+-- | alter term metadata
+modifyMeta f t = setMeta t . f $ getMeta t
 
 -- | get function type
 functionType (FDUser t _)  = t
@@ -84,5 +101,5 @@ instance Functor Term where
     fmap f (TList  m as)  = TList  (f m) (fmap (fmap f) as)
     fmap f (TUnit  m)     = TUnit  (f m)
 
-instance Show Stack where
+instance Show (Stack m) where
     show (Stack s) = "$" ++ show (reverse s) ++ "$"

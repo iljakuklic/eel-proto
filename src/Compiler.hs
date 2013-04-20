@@ -60,11 +60,12 @@ repl n ste = do
             ":q"      -> quit
             ":quit"   -> quit
             ":exit"   -> quit
-            ':':'t':' ':term -> do
-                case runParser (skip >> (infer <$> pTypeTable <*> pterm)) ste "<repl>" term of
+            ':':'t':' ':str -> do
+                case runParser (skip >> (infer <$> pTypeTable <*> pterm)) ste "<repl>" str of
                     Left err -> printErr err
-                    Right (Left err) -> printErr err
-                    Right (Right ty) -> putStrLn (show ty)
+                    Right term -> case termType term of
+                        Left err -> printErr err
+                        Right ty -> putStrLn (show term ++ ": " ++ show ty)
                 continue ste
             ":clear"  -> continue (ste { pStack = Stack []})
             ":ls"     -> printFuncs ste >> continue ste
