@@ -1,5 +1,5 @@
 
-module CommandLine(CommandLineError, parseCommandLine, commandLineHelp) where
+module CommandLine(CommandLineError, parseCommandLine, writeHelp) where
 
 import Compiler
 
@@ -7,6 +7,10 @@ import Text.Parsec
 import Text.Parsec.Perm
 import Text.Parsec.Pos
 import Data.List
+import qualified Text.PrettyPrint.HughesPJ as P
+import Text.PrettyPrint.HughesPJ((<+>), ($+$), ($$))
+
+import System.Environment
 
 -- | Command-line parsing error
 newtype CommandLineError = CommandLineError ParseError
@@ -76,6 +80,28 @@ parseCommandLine args = case parse cmdLineParser "" (zipWith CTok [1..] args) of
     Right settings -> Right settings
     Left err -> Left (CommandLineError err)
 
--- | command-line help/usage message
-commandLineHelp = undefined
+-- | write help message
+writeHelp = getProgName >>= putStrLn . show . commandLineHelp
 
+-- | command-line help/usage message
+commandLineHelp prog = P.text "" $+$ descr $+$ usage $+$ optDesc
+  where
+    descr = section "EEL -- Extensible Experimental Language" einfo
+    einfo = P.vcat . map P.text $ [
+        "by Lukáš Kuklínek <xkukli01@stud.fit.vutbr.cz>",
+        "Part of the master's thesis for Faculty of Information Technology,",
+        "Brno University of Technology, Brno, Czech Republic."
+      ]
+    usage = section "Usage:" (P.text prog <+> P.text "[OPTIONS] [SOURCES...]")
+    optDesc = section "Options:" optList
+    optList = P.vcat [
+        ln "-o FILE, --output=FILE" "generate output binary file named FILE",
+        ln "-L FILE, --llvm=FILE" "generate LLVM IR text file named FILE",
+        ln "-v, --verbose" "increase output verbosity",
+        ln "-i, --interactive" "launch interactive read-eval-print interpreter",
+        ln "-P, --no-prelude" "do not load the prelude library automatically",
+        ln "-e EXPR, --eval EXPR" "evaluate given EXPRession in EEL core",
+        ln "-h, --help" "show this help message"
+      ]
+    ln opts desc = P.text opts $$ P.nest 4 (P.text desc)
+    section heading body = P.text heading $+$ P.nest 4 body $+$ P.text ""

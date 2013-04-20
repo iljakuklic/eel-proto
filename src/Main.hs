@@ -16,7 +16,7 @@ main' = do
     case parseCommandLine args of
         Left cmderr -> hPutStrLn stderr (show cmderr)
         Right mode -> case mode of
-            Nothing -> putStr commandLineHelp
+            Nothing -> writeHelp
             Just settings -> do
                 result <- runCompiler settings
                 case result of
@@ -27,5 +27,5 @@ main' = do
                             putStrLn "--------------------"
                         printStack ste
 
-main = main' `E.catch` (\e -> putStrLn ("ERROR: " ++ show (e :: IOError)))
+main = main' `E.catch` (\err -> putStrLn ("ERROR: \n" ++ show (err :: IOError)))
 
