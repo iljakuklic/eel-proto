@@ -138,24 +138,3 @@ inferVal' env (TSumA m a) = setType' ta (TSumA m a') (unCollideT tSum <$> at <*>
     where (a', at) = inferVal' env a
 inferVal' env (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
     where (b', bt) = inferVal' env b
-
-{-
--- | Infer the type of a term
-inferTerm env t@(TComp _ f g) = join (inferComposition <$> inferTerm env f <*> inferTerm env g)
-inferTerm env t@(TQuot _ f)   = inferLiteral <$> (inferTerm env f)
-inferTerm env t@(TFunc _ f)   = maybe (throwError $ SESymbol f) return (M.lookup f env)
-inferTerm env term            = inferLiteral <$> inferVal env term
-
--- | Infer the type of a stack value
-inferVal env t@(TQuot _ _)    = infer env t
-inferVal env t@(TFunc _ _)    = infer env t
-inferVal env t@(TComp _ _ _)  = infer env t
-inferVal _   t@(TUnit _)      = return tUnit
-inferVal _   t@(TInt  _ _)    = return tInt
-inferVal _   t@(TChar _ _)    = return tChar
-inferVal _   t@(TFloat _ _)   = return tFloat
-inferVal env t@(TList _ xs)   = tList <$> (mapM (inferVal env) xs >>= foldM typeUnify ta)
-inferVal env t@(TPair _ a b)  = unCollideT tProd <$> inferVal env a <*> inferVal env b
-inferVal env t@(TSumA _ a)    = tSum <$> inferVal env a <*> pure (TyVar $ genTyVar ta)
-inferVal env t@(TSumB _ b)    = tSum (TyVar $ genTyVar ta) <$> inferVal env b
--}
