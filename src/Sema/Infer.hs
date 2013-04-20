@@ -92,7 +92,7 @@ inferComposition _ _ = error "Invalid composition inference"
 infer env = fst . inferTerm' env
 
 -- | set type or corresponding error in the term metadata
-setType' dflt term err@(Left _) = (termModifyType (const $ HasType err dflt) term, err)
+setType' dflt term err@(Left _) = (termModifyType (const $ HasType err dflt) term, Left SEInherited)
 setType' _dfl term (Right ty)   = setType'' term ty
 -- | set type in the term metadata
 setType'' term ty' = let ty = niceTyVars ty' in (termModifyType (const $ HasType (Right ty) ty) term, Right ty)
