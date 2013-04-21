@@ -1,5 +1,6 @@
 
 DOC=dist/doc/html/eel/eel/index.html
+HSFILES=src/*.hs src/*/*.hs
 
 top: eel
 doc: $(DOC)
@@ -11,10 +12,10 @@ readdoc: doc
 dist:
 	cabal configure
 
-$(DOC): dist
+$(DOC): dist $(HSFILES)
 	cabal haddock --executables
 
-dist/build/eel/eel: dist src/*.hs src/*/*.hs
+dist/build/eel/eel: dist $(HSFILES)
 	cabal build
 
 eel: dist/build/eel/eel
