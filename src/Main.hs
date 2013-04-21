@@ -25,7 +25,6 @@ main' = do
                         when (verboseOutput settings) $ do
                             printFuncs ste
                             putStrLn "--------------------"
-                        printStack ste
 
 main = main' `E.catch` (\err -> putStrLn ("ERROR: \n" ++ show (err :: IOError)))
 
