@@ -59,7 +59,7 @@ repl' n ste = do
             ":l"      -> printFuncs ste >> continue ste
             ':':str   -> printErrStr ("Unknown command: " ++ show str) >> continue ste
             line      -> do
-                ste'' <- case runParser (onLine n >> ptop) ste "<repl>" line of
+                ste'' <- case runParser (onLine n >> ptop) ste "<interactive>" line of
                     Left err   -> printErr err >> return ste
                     Right ste' -> (putStrLn $ show $ pStack ste') >> return ste'
                 continue ste''
@@ -73,7 +73,7 @@ printErr s    = printErrStr (show s)
 printErrStr s = hPutStrLn stderr ("ERROR: " ++ s)
 
 withParse n ste parser str action =
-    case runParser (onLine n >> skip >> parser) ste "<repl>" str of
+    case runParser (onLine n >> skip >> parser) ste "<interactive>" str of
         Left err -> printErr err
         Right term -> action term
 
