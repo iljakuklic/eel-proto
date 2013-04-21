@@ -95,8 +95,8 @@ commandLineHelp prog = P.text "" $+$ descr $+$ usage $+$ optDesc
     usage = section "Usage:" (P.text prog <+> P.text "[OPTIONS] [SOURCES...]")
     optDesc = section "Options:" optList
     optList = P.vcat [
-        ln "-o FILE, --output=FILE" "generate output binary file named FILE",
-        ln "-L FILE, --llvm=FILE" "generate LLVM IR text file named FILE",
+        ln "-o FILE, --output FILE" "generate output binary file named FILE",
+        ln "-L FILE, --llvm FILE" "generate LLVM IR text file named FILE",
         ln "-v, --verbose" "increase output verbosity",
         ln "-i, --interactive" "launch interactive read-eval-print interpreter",
         ln "-P, --no-prelude" "do not load the prelude library automatically",
