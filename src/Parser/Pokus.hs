@@ -54,7 +54,7 @@ testparse str =
 
 printFuncs :: PState Meta -> IO ()
 printFuncs (PState st _ _) = sequence_ [ printFunc n f | (n, f) <- M.toList st]
-printFunc  n (FDUser  t d) = printFunc' n t (show d)
-printFunc  n (FDBuiltIn b) = printFunc' n (builtInType b) "<<built-in>>"
-printFunc' n t d = printf "%-10s : %-50s = %s\n" (show n) (show t) d
+printFunc  n (FDUser    d) = printFunc' n (either show show $ termType d) (show d)
+printFunc  n (FDBuiltIn b) = printFunc' n (show $ builtInType b) "<<built-in>>"
+printFunc' n t d = printf "%-10s : %-50s = %s\n" (show n) t d
 printStack (PState _ _ (Stack stk)) = mapM_ (putStrLn . show) stk

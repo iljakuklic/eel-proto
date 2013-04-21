@@ -2,16 +2,13 @@
 module Sema.Term (
         Term(..), FunctionDef(..), BuiltIn(..),
         SymTable, Stack(..),
-        getMeta, setMeta, modifyMeta,
-        onStack, functionType
+        getMeta, setMeta, modifyMeta, onStack
     ) where
 
 import qualified Data.Map as M
 
 import Sema.Common
-import Sema.Types
 import Builtins.Builtins
-import Builtins.Types
 
 -- | Term Representation
 data Term m
@@ -29,8 +26,8 @@ data Term m
 
 -- | function definition
 data FunctionDef m
-     = FDUser    (Type Symbol) (Term m)  -- ^ user-defined function
-     | FDBuiltIn BuiltIn                 -- ^ built-in function
+     = FDUser    (Term m)  -- ^ user-defined function
+     | FDBuiltIn BuiltIn   -- ^ built-in function
      deriving (Show)
 
 -- | Symbol table
@@ -66,10 +63,6 @@ setMeta (TUnit  _)     m = TUnit  m
 
 -- | alter term metadata
 modifyMeta f t = setMeta t . f $ getMeta t
-
--- | get function type
-functionType (FDUser t _)  = t
-functionType (FDBuiltIn b) = builtInType b
 
 -- | perform a function on stack
 onStack f stk = Stack (f (let Stack s = stk in s))

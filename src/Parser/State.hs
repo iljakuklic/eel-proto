@@ -10,6 +10,7 @@ import Sema.Term
 import Sema.Error
 import Sema.Common
 import Sema.Types
+import Builtins.Types
 
 import Text.Parsec
 import Control.Applicative
@@ -71,7 +72,10 @@ termType term = case mType (getMeta term) of
 termInferredType term = case mType (getMeta term) of HasType _ t -> Just t; _ -> Nothing
 
 -- | get table mapping symbols to types
-pTypeTable = fmap functionType . pSymTable <$> getState
+pTypeTable = fmap getT . pSymTable <$> getState
+  where
+    getT (FDUser term) = termType term
+    getT (FDBuiltIn b) = return $ builtInType b
 
 -- | Symbol table lookup
 lookupFunc sym = do

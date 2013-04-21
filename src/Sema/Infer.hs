@@ -112,7 +112,7 @@ inferTerm env (TComp m f g) = setType' anyFunc (TComp m f' g') (join (inferCompo
 inferTerm env (TQuot m f) = setType' (inferLiteral anyFunc) (TQuot m f') (inferLiteral <$> ft)
     where (f', ft) = inferTerm env f
 inferTerm env fun@(TFunc _ f) = setType' anyFunc fun ft
-    where ft = maybe (throwError $ SESymbol f) return (M.lookup f env)
+    where ft = maybe (Left $ SESymbol f) id (M.lookup f env)
 inferTerm env term = setType' anyFunc term' (inferLiteral <$> ty)
     where (term', ty) = inferVal env term
 

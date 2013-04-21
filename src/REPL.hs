@@ -51,7 +51,7 @@ repl' n ste = do
                 case M.lookup (Symbol str) (pSymTable ste) of
                     Nothing -> printErrStr ("Could not find symbol: '" ++ str ++ "'")
                     Just fd -> case fd of
-                        FDUser _ t  -> putStrLn (dumpTerm t)
+                        FDUser term -> putStrLn (dumpTerm term)
                         FDBuiltIn _ -> putStrLn "<builtin>"
                 continue ste
             ":x"      -> continue (ste { pStack = Stack []})

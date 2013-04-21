@@ -22,8 +22,8 @@ instance Evaluable (Term Meta) where
 
 -- function definition
 instance Evaluable (FunctionDef Meta) where
-    eval (FDBuiltIn  bi) = eval bi
-    eval (FDUser _ term) = eval term
+    eval (FDBuiltIn bi) = eval bi
+    eval (FDUser term)  = eval term
 
 -- builtin invokation
 instance Evaluable BuiltIn where
@@ -33,7 +33,7 @@ instance Evaluable BuiltIn where
         let body = infer env body'
         case termType body of
             Left err -> fail ("ERROR while inferring type for '" ++ termToString name ++ "': " ++ show err)
-            Right ftype -> addFunc (Symbol $ termToString name) (FDUser ftype body)
+            Right _  -> addFunc (Symbol $ termToString name) (FDUser body)
     eval BIfix = do
         funq@(TQuot m0 fun) <- pop
         let m = m0 %% m0
