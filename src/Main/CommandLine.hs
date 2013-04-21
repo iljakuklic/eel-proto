@@ -11,6 +11,8 @@ import qualified Text.PrettyPrint.HughesPJ as P
 import Text.PrettyPrint.HughesPJ((<+>), ($+$), ($$))
 
 import System.Environment
+import Paths_eel as EEL
+import Data.Version
 
 -- | Command-line parsing error
 newtype CommandLineError = CommandLineError ParseError
@@ -88,6 +90,7 @@ commandLineHelp prog = P.text "" $+$ descr $+$ usage $+$ optDesc
   where
     descr = section "EEL -- Extensible Experimental Language" einfo
     einfo = P.vcat . map P.text $ [
+        "version " ++ showVersion EEL.version,
         "by Lukáš Kuklínek <xkukli01@stud.fit.vutbr.cz>",
         "Part of the master's thesis for Faculty of Information Technology,",
         "Brno University of Technology, Brno, Czech Republic."
