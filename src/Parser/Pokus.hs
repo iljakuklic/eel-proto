@@ -25,20 +25,27 @@ e = mEps
 ptok p = p <* skip
 pstok = ptok . string
 psbet a b = between (pstok a) (pstok b)
-pterm =  TComp e <$> pfunc <*> pterm
-     <|> pure (TFunc e (Symbol "id"))
-pfunc =  TInt e . read <$> ptok (many1 digit)
+pterm = ploc (TComp e <$> pfunc <*> pterm
+     <|> pure (TFunc e (Symbol "id")))
+pfunc = ploc (TInt e . read <$> ptok (many1 digit)
      <|> TFunc e <$> (ptok psymb >>= (\s -> s <$ lookupFunc s))
      <|> TQuot e <$> psbet "[" "]" pterm
-     <|> psbet "'" "'" pstr
-pstr  = TList e <$> many pchr
+     <|> psbet "'" "'" pstr)
+pstr  = ploc (TList e <$> many pchr)
 pchr  = TChar e <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape seqs
 psymb = Symbol <$> many1 (satisfy (\c -> isAlpha c || c `elem` "0123456789+-*/.:&^%$#@!<>="))
 peval = () <$ many (pfunc >>= eval)
 ptop  = skip >> peval >> eof >> getState
 skip  = many ((space >> return ()) <|> (try (string "//") >> (anyChar `manyTill` eol) >> return ()))
 eol   = (char '\n' >> return ()) <|> eof
+ploc innerP = do
+    pstart <- plocation
+    term <- innerP
+    pend <- plocation
+    return . termSetPos term $ mergePos pstart pend
 
+plocation = conv <$> getPosition
+    where conv pos = let p = (sourceLine pos, sourceColumn pos) in HasPos (sourceName pos) p p
 
 testparse str =
     case runParser ptop initState "<here>" str of
