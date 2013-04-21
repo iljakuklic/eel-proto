@@ -89,7 +89,7 @@ inferComposition f@(TyBin (TyFunc ph1) a b) g@(TyBin (TyFunc _) _ _) = do
 inferComposition _ _ = error "Invalid composition inference"
 
 -- | Main type inference engine
-infer env = fst . inferTerm' env
+infer env = fst . inferTerm env
 
 -- | set type or corresponding error in the term metadata
 setType' dflt term err@(Left _) = (termModifyType (const $ HasType err dflt) term, Left SEInherited)
@@ -105,36 +105,38 @@ getType' (HasType t _) = t
 getType' NoType        = error "getType' NoType never happens"
 
 -- | infer term type only if not done so already
-inferTerm = inferTerm'
-inferTerm' _env t | hasType' tyMeta = (t, getType' tyMeta)
+inferTerm _env t | hasType' tyMeta = (t, getType' tyMeta)
     where tyMeta = mType . getMeta $ t
-inferTerm' env (TComp m f g) = setType' anyFunc (TComp m f' g') (join (inferComposition <$> ft <*> gt))
+inferTerm env (TComp m f g) = setType' anyFunc (TComp m f' g') (join (inferComposition <$> ft <*> gt))
     where (f', ft) = inferTerm env f; (g', gt) = inferTerm env g
-inferTerm' env (TQuot m f) = setType' (inferLiteral anyFunc) (TQuot m f') (inferLiteral <$> ft)
+inferTerm env (TQuot m f) = setType' (inferLiteral anyFunc) (TQuot m f') (inferLiteral <$> ft)
     where (f', ft) = inferTerm env f
-inferTerm' env fun@(TFunc _ f) = setType' anyFunc fun ft
+inferTerm env fun@(TFunc _ f) = setType' anyFunc fun ft
     where ft = maybe (throwError $ SESymbol f) return (M.lookup f env)
-inferTerm' env term = setType' anyFunc term' (inferLiteral <$> ty)
-    where (term', ty) = inferVal' env term
+inferTerm env term = setType' anyFunc term' (inferLiteral <$> ty)
+    where (term', ty) = inferVal env term
 
 -- | infer value term type only if not done so already
-inferVal' _env t | hasType' tyMeta = (t, getType' tyMeta)
+inferVal _env t | hasType' tyMeta = (t, getType' tyMeta)
     where tyMeta = mType . getMeta $ t
-inferVal' env t@(TQuot _ _)    = inferTerm env t
-inferVal' env t@(TFunc _ _)    = inferTerm env t
-inferVal' env t@(TComp _ _ _)  = inferTerm env t
-inferVal' _   t@(TUnit _)      = setType'' t tUnit
-inferVal' _   t@(TInt  _ _)    = setType'' t tInt
-inferVal' _   t@(TChar _ _)    = setType'' t tChar
-inferVal' _   t@(TFloat _ _)   = setType'' t tFloat
-inferVal' env (TList m xs)     = setType' (tList ta) (TList m xs') ty
-    where (xs', ts') = unzip $ fmap (inferVal' env) xs
+inferVal env t@(TQuot _ _)    = inferTerm env t
+inferVal env t@(TFunc _ _)    = inferTerm env t
+inferVal env t@(TComp _ _ _)  = inferTerm env t
+inferVal _   t@(TUnit _)      = setType'' t tUnit
+inferVal _   t@(TInt  _ _)    = setType'' t tInt
+inferVal _   t@(TChar _ _)    = setType'' t tChar
+inferVal _   t@(TFloat _ _)   = setType'' t tFloat
+inferVal env (TList m xs)     = setType' (tList ta) (TList m xs') ty
+    where (xs', ts') = unzip $ fmap (inferVal env) xs
           ty = tList <$> (foldM ff ta ts')
           ff a b = join (typeUnify a <$> b)
-inferVal' env (TPair m a b) = setType' ta (TPair m a' b') (unCollideT tProd <$> at <*> bt)
-    where (a', at) = inferVal' env a
-          (b', bt) = inferVal' env b
-inferVal' env (TSumA m a) = setType' ta (TSumA m a') (unCollideT tSum <$> at <*> pure tb)
-    where (a', at) = inferVal' env a
-inferVal' env (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
-    where (b', bt) = inferVal' env b
+inferVal env (TPair m a b) = setType' ta (TPair m a' b') (unCollideT tProd <$> at <*> bt)
+    where (a', at) = inferVal env a
+          (b', bt) = inferVal env b
+inferVal env (TSumA m a) = setType' ta (TSumA m a') (unCollideT tSum <$> at <*> pure tb)
+    where (a', at) = inferVal env a
+inferVal env (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
+    where (b', bt) = inferVal env b
+
+-- | force the term to be the specified type by unification
+--forceType
