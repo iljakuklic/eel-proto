@@ -1,5 +1,5 @@
 
-module Sema.Infer (infer, inferCoerce) where
+module Sema.Infer (infer, coerce, coerceToInput, inferCoerce) where
 
 import Sema.Types
 import Sema.Error
@@ -132,11 +132,23 @@ inferCoerce' (TList m xs) (TyList txs) = do
 inferCoerce' t _ty = return t
 
 -- | Main type inference engine
-infer env term = either err id term''
-  where
-    term' = fst (inferTerm env term)
-    term'' = inferCoerce term' (getTypeI term')
-    err e = error ("Inference recosntruction error: " ++ show e ++ "\nTerm: " ++ show term)
+infer env term = either err id (inferAndCoerce getTypeI env term)
+  where err e = error ("Inference recosntruction error: " ++ show e ++ "\nTerm: " ++ show term)
+
+-- | infer type and force it to particular subtype
+coerce ty env term = inferAndCoerce (const ty) env term
+
+-- | infer and coerce based on previously inferred type
+inferAndCoerce tyf env term = inferCoerce term' (tyf term')
+  where term' = fst (inferTerm env term)
+
+-- | coerce the function so that its input matches given type
+coerceToInput env phaseT inpT term = inferAndCoerce (const ty) env term
+    where
+        tv = TyVar $ genTyVar inpT               -- fresh type var
+        pv = TyVar $ genTyVar (inpT `tProd` tv)  -- fresh phase var
+        -- type of a function consuming desired input
+        ty = tFunc (maybe pv TyPhase phaseT) inpT tv
 
 -- | set type or corresponding error in the term metadata
 setType' dflt term err@(Left _) = (termModifyType (const $ HasType err dflt) term, Left SEInherited)
