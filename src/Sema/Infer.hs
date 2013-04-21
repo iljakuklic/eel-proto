@@ -1,5 +1,5 @@
 
-module Sema.Infer (infer, coerce, coerceToInput, inferCoerce) where
+module Sema.Infer (infer, coerce, coerceToInput, inferCoerce, stackInfer) where
 
 import Sema.Types
 import Sema.Error
@@ -178,7 +178,7 @@ inferTerm env term = setType' anyFunc term' (inferLiteral <$> ty)
 -- | infer value term type only if not done so already
 inferVal _env t | hasType' tyMeta = (t, getType' tyMeta)
     where tyMeta = mType . getMeta $ t
-inferVal env t@(TQuot _ _)    = inferTerm env t
+inferVal env  (TQuot _ t)    = inferTerm env t
 inferVal env t@(TFunc _ _)    = inferTerm env t
 inferVal env t@(TComp _ _ _)  = inferTerm env t
 inferVal _   t@(TUnit _)      = setType'' t tUnit
@@ -196,3 +196,10 @@ inferVal env (TSumA m a) = setType' ta (TSumA m a') (unCollideT tSum <$> at <*> 
     where (a', at) = inferVal env a
 inferVal env (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
     where (b', bt) = inferVal env b
+
+-- | Get the type of a stack
+stackInfer env (Stack stk) = case either err id stkType of (TyBin _ _ (TyBin _ _ t)) -> niceTyVars t; _ -> err
+  where
+    stkTerm = Data.List.foldr (flip $ TPair mEps) (TUnit mEps) stk
+    stkType = getType' . mType . getMeta . infer env $ stkTerm
+    err = error ("Incorrect stack type!!!\n" ++ show (Stack stk))
