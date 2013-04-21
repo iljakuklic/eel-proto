@@ -1,6 +1,6 @@
 
 
-module REPL(repl) where
+module Main.REPL(repl) where
 
 import Parser.Pokus
 import Parser.State

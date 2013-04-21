@@ -2,8 +2,8 @@
 
 module Main(main) where
 
-import Compiler
-import CommandLine
+import Main.Compiler
+import Main.CommandLine
 import Parser.Pokus
 
 import System.Environment

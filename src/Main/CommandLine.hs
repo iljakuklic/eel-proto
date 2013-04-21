@@ -1,7 +1,7 @@
 
-module CommandLine(CommandLineError, parseCommandLine, writeHelp) where
+module Main.CommandLine(CommandLineError, parseCommandLine, writeHelp) where
 
-import Compiler
+import Main.Compiler
 
 import Text.Parsec
 import Text.Parsec.Perm

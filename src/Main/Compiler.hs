@@ -1,8 +1,8 @@
 
-module Compiler(Settings(..), InputSpec(..), runCompiler) where
+module Main.Compiler(Settings(..), InputSpec(..), runCompiler) where
 
 import Parser.Pokus
-import REPL
+import Main.REPL
 
 import Prelude hiding (catch)
 import Control.Monad
