@@ -108,25 +108,25 @@ coerce' term ty = do
 inferCoerce term ty = do
     term' <- coerce' term ty
     inferCoerce' term' (getTypeI term')
-inferCoerce' t@(TComp m f g) tt@(TyBin (TyFunc ph) tf tg) = do
+inferCoerce' (TComp m f g) tt@(TyBin (TyFunc ph) tf tg) = do
     let tx = TyVar $ genTyVar tt
     f' <- inferCoerce f (TyBin (TyFunc ph) tf tx)
     g' <- inferCoerce g (TyBin (TyFunc ph) tx tg)
     return (TComp m f' g')
-inferCoerce' (TQuot m q) ty@(TyBin (TyFunc _) _ (TyBin TyProd _ tq)) = do
+inferCoerce' (TQuot m q) (TyBin (TyFunc _) _ (TyBin TyProd _ tq)) = do
     q' <- inferCoerce q tq
     return (TQuot m q')
-inferCoerce' (TSumA m a) ty@(TyBin TySum tta _) = do
+inferCoerce' (TSumA m a) (TyBin TySum tta _) = do
     a' <- inferCoerce a tta
     return (TSumA m a')
-inferCoerce' (TSumB m b) ty@(TyBin TySum _ ttb) = do
+inferCoerce' (TSumB m b) (TyBin TySum _ ttb) = do
     b' <- inferCoerce b ttb
     return (TSumB m b')
-inferCoerce' (TPair m a b) ty@(TyBin TyProd tta ttb) = do
+inferCoerce' (TPair m a b) (TyBin TyProd tta ttb) = do
     a' <- inferCoerce a tta
     b' <- inferCoerce b ttb
     return (TPair m a' b')
-inferCoerce' (TList m xs) ty@(TyList txs) = do
+inferCoerce' (TList m xs) (TyList txs) = do
     xs' <- mapM (flip inferCoerce txs) xs
     return (TList m xs')
 inferCoerce' t _ty = return t
