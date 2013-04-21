@@ -7,7 +7,7 @@ import Parser.State
 import Parser.Dump
 import Sema.Term
 import Sema.Infer
-import Sema.Common
+import Sema.Symbol
 
 import System.IO
 import Control.Applicative

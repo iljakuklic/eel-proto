@@ -4,7 +4,7 @@
 module Builtins.Eval (eval) where
 
 import Sema.Term
-import Sema.Common
+import Sema.Symbol
 import Sema.Infer
 import Parser.State
 import Backend.Eval

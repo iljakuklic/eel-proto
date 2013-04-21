@@ -4,7 +4,7 @@ module Parser.Rule (
         matchRules
     ) where
 
-import Sema.Common
+import Sema.Symbol
 import Sema.Term
 
 import qualified Data.Map as M

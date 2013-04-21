@@ -1,7 +1,7 @@
 
 module Builtins.Builtins(BuiltIn(..), builtInName, allBuiltIns) where
 
-import Sema.Common
+import Sema.Symbol
 
 -- | Built-in functions enumeration
 data BuiltIn 

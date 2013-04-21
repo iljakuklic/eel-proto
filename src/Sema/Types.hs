@@ -11,7 +11,7 @@ module Sema.Types(
     TyVars, genTyVar, genTyVars
   ) where
 
-import Sema.Common
+import Sema.Symbol
 
 import Prelude hiding (all, notElem)
 import Data.Foldable

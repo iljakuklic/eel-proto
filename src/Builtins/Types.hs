@@ -4,7 +4,7 @@ module Builtins.Types(builtInType) where
 
 import Builtins.Builtins
 import Sema.Types
-import Sema.Common
+import Sema.Symbol
 
 -- | helper functions to create variables
 var = TyVar . Symbol

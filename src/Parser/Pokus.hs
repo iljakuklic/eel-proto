@@ -4,7 +4,7 @@ module Parser.Pokus where
 import Builtins.Eval
 import Sema.Term
 import Parser.State
-import Sema.Common
+import Sema.Symbol
 import Builtins.Builtins()
 import Builtins.Types
 import Builtins.Table

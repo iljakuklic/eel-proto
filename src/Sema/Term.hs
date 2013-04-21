@@ -7,7 +7,7 @@ module Sema.Term (
 
 import qualified Data.Map as M
 
-import Sema.Common
+import Sema.Symbol
 import Builtins.Builtins
 
 -- | Term Representation
