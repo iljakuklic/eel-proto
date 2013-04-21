@@ -27,6 +27,7 @@ repl ste = do
 repl' n ste = do
     let quit = return (Right ste)
     let continue ste' = prompt (succ n) >> repl' (succ n) ste'
+    let continue' = continue ste
     end <- hIsEOF stdin
     if end then quit else do
         lineIn <- getLine
@@ -35,34 +36,40 @@ repl' n ste = do
             ":q"      -> quit
             ":quit"   -> quit
             ":exit"   -> quit
-            ":?"      -> help >> continue ste
-            ":h"      -> help >> continue ste
-            ":help"   -> help >> continue ste
+            ":?"      -> help >> continue'
+            ":h"      -> help >> continue'
+            ":help"   -> help >> continue'
             ':':'t':' ':str -> do
                 withParse n ste pinfer str $ \term -> do
                     case termType term of
                         Left err -> printErr err
                         Right ty -> putStrLn (show term ++ ": " ++ show ty)
-                continue ste
+                continue'
             ':':'d':' ':str -> do
                 withParse n ste pinfer str $ \term -> putStrLn (dumpTerm term)
-                continue ste
+                continue'
             ':':'i':' ':str -> do
                 case M.lookup (Symbol str) (pSymTable ste) of
                     Nothing -> printErrStr ("Could not find symbol: '" ++ str ++ "'")
                     Just fd -> case fd of
                         FDUser term -> putStrLn (dumpTerm term)
                         FDBuiltIn _ -> putStrLn "<builtin>"
-                continue ste
+                continue'
             ":x"      -> continue (ste { pStack = Stack []})
-            ":ls"     -> printFuncs ste >> continue ste
-            ":l"      -> printFuncs ste >> continue ste
-            ':':str   -> printErrStr ("Unknown command: " ++ show str) >> continue ste
+            ":ls"     -> printFuncs ste >> continue'
+            ":l"      -> printFuncs ste >> continue'
+            ":s"      -> stackDump  ste >> continue'
+            ':':str   -> printErrStr ("Unknown command: " ++ show str) >> continue'
             line      -> do
                 ste'' <- case runParser (onLine n >> ptop) ste "<interactive>" line of
                     Left err   -> printErr err >> return ste
                     Right ste' -> (putStrLn $ show $ pStack ste') >> return ste'
                 continue ste''
+
+stackDump ste = putStrLn (show stk) >> putStrLn ("Type: " ++ show ty)
+    where
+        stk = pStack ste
+        ty  = stackInfer (pTypeTablePure ste) stk
 
 prompt n = putStr (zeroPad 3 (show (n :: Int)) ++ "> ")
 zeroPad n = reverse . take n . (++ repeat '0') . reverse
@@ -88,5 +95,6 @@ helpMsg = unlines [
     "    :d EXPR    dump AST of an expression",
     "    :i NAME    dump AST of an user-defined function",
     "    :x         clear the stack",
+    "    :s         show current stack",
     "    :l         list of defined functions"
   ]

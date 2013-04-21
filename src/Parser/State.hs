@@ -2,7 +2,7 @@
 module Parser.State (
         PState(..), Meta(..), TypeInfo(..), PosInfo(..),
         (%%), mEps, mergePos, termSetPos, termModifyType, termType, termInferredType,
-        lookupFunc, pTypeTable
+        lookupFunc, pTypeTable, pTypeTablePure
     ) where
 
 import Parser.Rule
@@ -72,7 +72,8 @@ termType term = case mType (getMeta term) of
 termInferredType term = case mType (getMeta term) of HasType _ t -> Just t; _ -> Nothing
 
 -- | get table mapping symbols to types
-pTypeTable = fmap getT . pSymTable <$> getState
+pTypeTable = pTypeTablePure <$> getState
+pTypeTablePure = fmap getT . pSymTable
   where
     getT (FDUser term) = termType term
     getT (FDBuiltIn b) = return $ builtInType b
