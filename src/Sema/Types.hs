@@ -98,10 +98,13 @@ isRowMono (Row xs) = all isTypeMono (init xs)
 
 -- | Create atom type
 tAtom name = TyAtom (Symbol name)
-
+-- | Sum type shortcut
 tSum  = TyBin TySum
+-- | Product type shortcut
 tProd = TyBin TyProd
+-- | Function type shortcut
 tFunc ph = TyBin (TyFunc ph)
+-- | List type shortcut
 tList = TyList
 
 -- | Unit type shortcut.
