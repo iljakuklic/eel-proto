@@ -1,5 +1,5 @@
 
-module Sema.Infer (infer) where
+module Sema.Infer (infer, inferCoerce) where
 
 import Sema.Types
 import Sema.Error
@@ -88,8 +88,55 @@ inferComposition f@(TyBin (TyFunc ph1) a b) g@(TyBin (TyFunc _) _ _) = do
     return $ niceTyVars (TyBin (TyFunc ph) (subst sm a) (subst sm d))
 inferComposition _ _ = error "Invalid composition inference"
 
+-- | get inferred type unsafely
+getTypeI term = case mType (getMeta term) of
+        NoType -> error "Type not inferred yet"
+        HasType _ t -> t
+
+-- | infer unification of a term with given type
+inferUnify ty term = do
+    sm <- unify ty (unCollide ty $ getTypeI term)
+    return $ niceTyVars (subst sm ty)
+
+-- | set type unsafely by unification
+coerce' term ty = do
+    t' <- inferUnify ty term
+    return $ termModifyType (mod' t') term
+  where mod' t _t = case mType (getMeta term) of NoType -> NoType; HasType t1 _ -> HasType t1 t
+
+-- | infer type of a coercion of a term, assumes inferrence has been already performed
+inferCoerce term ty = do
+    term' <- coerce' term ty
+    inferCoerce' term' (getTypeI term')
+inferCoerce' t@(TComp m f g) tt@(TyBin (TyFunc ph) tf tg) = do
+    let tx = TyVar $ genTyVar tt
+    f' <- inferCoerce f (TyBin (TyFunc ph) tf tx)
+    g' <- inferCoerce g (TyBin (TyFunc ph) tx tg)
+    return (TComp m f' g')
+inferCoerce' (TQuot m q) ty@(TyBin (TyFunc _) _ (TyBin TyProd _ tq)) = do
+    q' <- inferCoerce q tq
+    return (TQuot m q')
+inferCoerce' (TSumA m a) ty@(TyBin TySum tta _) = do
+    a' <- inferCoerce a tta
+    return (TSumA m a')
+inferCoerce' (TSumB m b) ty@(TyBin TySum _ ttb) = do
+    b' <- inferCoerce b ttb
+    return (TSumB m b')
+inferCoerce' (TPair m a b) ty@(TyBin TyProd tta ttb) = do
+    a' <- inferCoerce a tta
+    b' <- inferCoerce b ttb
+    return (TPair m a' b')
+inferCoerce' (TList m xs) ty@(TyList txs) = do
+    xs' <- mapM (flip inferCoerce txs) xs
+    return (TList m xs')
+inferCoerce' t _ty = return t
+
 -- | Main type inference engine
-infer env = fst . inferTerm env
+infer env term = either err id term''
+  where
+    term' = fst (inferTerm env term)
+    term'' = inferCoerce term' (getTypeI term')
+    err e = error ("Inference recosntruction error: " ++ show e ++ "\nTerm: " ++ show term)
 
 -- | set type or corresponding error in the term metadata
 setType' dflt term err@(Left _) = (termModifyType (const $ HasType err dflt) term, Left SEInherited)
@@ -137,6 +184,3 @@ inferVal env (TSumA m a) = setType' ta (TSumA m a') (unCollideT tSum <$> at <*> 
     where (a', at) = inferVal env a
 inferVal env (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
     where (b', bt) = inferVal env b
-
--- | force the term to be the specified type by unification
---forceType
