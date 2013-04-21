@@ -39,7 +39,7 @@ data PosInfo = NoPos  -- ^ position is not known or has none
 -- | Merge two (overlapping) positions into one
 mergePos NoPos x = x
 mergePos x NoPos = x
-mergePos (HasPos f1 s1 e1) (HasPos f2 s2 e2) | f1 == f2 = HasPos f1 (s1 `min` s2) (e1 `min` e2)
+mergePos (HasPos f1 s1 e1) (HasPos f2 s2 e2) | f1 == f2 = HasPos f1 (s1 `min` s2) (e1 `max` e2)
 mergePos _ _ = NoPos
 
 -- | Parsed terms metadata
