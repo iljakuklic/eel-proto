@@ -1,6 +1,6 @@
 
 module Parser.State (
-        PState(..), Meta(..), TypeInfo(..),
+        PState(..), Meta(..), TypeInfo(..), PosInfo(..),
         (%%), mEps, mergePos, termSetPos, termModifyType, termType, termInferredType,
         lookupFunc, pTypeTable
     ) where

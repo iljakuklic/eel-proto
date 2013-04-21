@@ -4,6 +4,7 @@ module REPL(repl) where
 
 import Parser.Pokus
 import Parser.State
+--import Parser.Dump
 import Sema.Term(Stack(Stack))
 import Sema.Infer
 
@@ -25,12 +26,12 @@ repl n ste = do
             ":quit"   -> quit
             ":exit"   -> quit
             ':':'t':' ':str -> do
-                case runParser (skip >> (infer <$> pTypeTable <*> pterm)) ste "<repl>" str of
-                    Left err -> printErr err
-                    Right term -> case termType term of
+                withParse ste (infer <$> pTypeTable <*> pterm) str $ \term -> do
+                    case termType term of
                         Left err -> printErr err
                         Right ty -> putStrLn (show term ++ ": " ++ show ty)
                 continue ste
+            --':':'d':' ':str -> quit
             ":clear"  -> continue (ste { pStack = Stack []})
             ":ls"     -> printFuncs ste >> continue ste
             line      -> do
@@ -39,4 +40,11 @@ repl n ste = do
                     Left err   -> printErr err >> return ste
                     Right ste' -> (putStrLn $ show $ pStack ste') >> return ste'
                 continue ste''
-  where printErr s = hPutStrLn stderr ("ERROR: " ++ show s)
+
+printErr s = hPutStrLn stderr ("ERROR: " ++ show s)
+
+withParse ste parser str action =
+    case runParser (skip >> parser) ste "<repl>" str of
+        Left err -> printErr err
+        Right term -> action term
+
