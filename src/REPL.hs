@@ -35,6 +35,9 @@ repl' n ste = do
             ":q"      -> quit
             ":quit"   -> quit
             ":exit"   -> quit
+            ":?"      -> help >> continue ste
+            ":h"      -> help >> continue ste
+            ":help"   -> help >> continue ste
             ':':'t':' ':str -> do
                 withParse ste pinfer str $ \term -> do
                     case termType term of
@@ -51,7 +54,7 @@ repl' n ste = do
                         FDUser _ t  -> putStrLn (dumpTerm t)
                         FDBuiltIn _ -> putStrLn "<builtin>"
                 continue ste
-            ":clear"  -> continue (ste { pStack = Stack []})
+            ":x"      -> continue (ste { pStack = Stack []})
             ":ls"     -> printFuncs ste >> continue ste
             ":l"      -> printFuncs ste >> continue ste
             ':':str   -> printErrStr ("Unknown command: " ++ show str) >> continue ste
@@ -72,3 +75,14 @@ withParse ste parser str action =
         Left err -> printErr err
         Right term -> action term
 
+help = putStr helpMsg
+helpMsg = unlines [
+    "  Available commands:",
+    "    :?         show this help message",
+    "    :q         quit",
+    "    :t EXPR    print type of an expression",
+    "    :d EXPR    dump AST of an expression",
+    "    :i NAME    dump AST of an user-defined function",
+    "    :x         clear the stack",
+    "    :l         list of defined functions"
+  ]
