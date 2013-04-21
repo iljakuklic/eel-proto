@@ -57,7 +57,7 @@ runCompiler settings = do
     inp <- input
     let res' = parseStrs initState inp
     if interactMode settings
-        then either (return . Left) (\ste' -> repl 1 ste') res'
+        then either (return . Left) (\ste' -> repl ste') res'
         else return res'
   where
     infiles    = map InputFile $ inputFilePaths settings
