@@ -33,8 +33,9 @@ pfunc = ploc (TInt e . read <$> ptok (many1 digit)
 pstr  = ploc (TList e <$> many pchr)
 pchr  = TChar e <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape seqs
 psymb = Symbol <$> many1 (satisfy (\c -> isAlpha c || c `elem` "0123456789+-*/.:&^%$#@!<>="))
-peval = () <$ many (pfunc >>= eval)
-ptop  = skip >> peval >> eof >> getState
+peval = () <$ many ((pfunc >>= eval) <|> pext)
+ptop  = skip >> (peval) >> eof >> getState
+pext  = string "~~~" >> skip >> invoke (Symbol "ext") >> many anyChar >> return ()
 skip  = many ((space >> return ()) <|> (try (string "//") >> (anyChar `manyTill` eol) >> return ()))
 eol   = (char '\n' >> return ()) <|> eof
 ploc innerP = do
