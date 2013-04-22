@@ -89,4 +89,6 @@ builtInType BIlet    = [a, fun e [b] [c], tString] ~+> [c]
 -- Parsing functions
 builtInType BIdefrulepri = [a, [b] ~*> [c], tString, tInt] ~+> [a]
 builtInType BIinvoke     = [a, tString] ~*> [b]
-
+-- Primitive parsers
+builtInType BIppchar = [a, tInt, tInt] ~*> [a, tChar]
+builtInType BIppfail = [a, tString] ~*> [b]

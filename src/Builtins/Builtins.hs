@@ -57,6 +57,9 @@ data BuiltIn
      -- Parser functions
      | BIdefrulepri    -- ^ define grammar rule
      | BIinvoke        -- ^ invoke grammar rule
+     -- Primitive parsers
+     | BIppchar        -- ^ read a char (within a ASCII range) from the source
+     | BIppfail        -- ^ fail with a message
      deriving (Show, Bounded, Enum, Eq)
 
 

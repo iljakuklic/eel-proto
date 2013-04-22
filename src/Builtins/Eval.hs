@@ -10,7 +10,7 @@ import Builtins.Conversions
 import Control.Applicative
 
 import Data.Char
-import Text.Parsec(Stream, ParsecT)
+import Text.Parsec(Stream, ParsecT, satisfy)
 
 e = mEps
 
@@ -84,6 +84,16 @@ instance Evaluable BuiltIn where
 
     -- grammar nonterminal parsing invokation
     eval BIinvoke  = pop >>= (invoke . Symbol . termToString)
+
+    -- primitive parser for single character
+    eval BIppchar = do
+        TInt _ hi <- pop
+        TInt _ lo <- pop
+        char' <- satisfy (\ch -> let asciicode = ord ch in lo <= asciicode && asciicode <= hi)
+        push $ TChar mEps char'
+
+    -- failing primitive parser
+    eval BIppfail = pop >>= fail . ("User error: " ++) . termToString
 
     -- evaluate a function without side effects (parsing, function definitions etc.)
     eval bi = evalPure (evalP bi)
