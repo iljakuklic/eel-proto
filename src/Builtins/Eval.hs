@@ -2,7 +2,6 @@
 module Builtins.Eval (eval, invoke) where
 
 import Sema.Term
-import Sema.Symbol
 import Sema.Infer
 import Parser.State
 import Parser.Eval

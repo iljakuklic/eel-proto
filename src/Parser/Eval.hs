@@ -11,7 +11,6 @@ module Parser.Eval (
 import Sema.Term
 import Sema.Types
 import Sema.Infer
-import Sema.Symbol
 import Parser.State
 import Parser.Rule
 

@@ -2,7 +2,7 @@
 
 module Sema.Types(
     -- * Data structures
-    Type(..), Type2(..), TyPhaseEnum(..), Row,
+    Type(..), Type2(..), TyPhaseEnum(..), Row, Symbol(..),
     -- * Type manipulation functions
     toListUniq, tyRow, isTypeMono, isRowMono,
     -- * Type representation smart constructors

@@ -11,7 +11,6 @@ module Parser.State (
 import Parser.Rule
 import Sema.Term
 import Sema.Error
-import Sema.Symbol
 import Sema.Types
 import Builtins.Types
 

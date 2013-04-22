@@ -1,7 +1,7 @@
 
 module Sema.Term (
         Term(..), FunctionDef(..), BuiltIn(..),
-        SymTable, Stack(..),
+        SymTable, Stack(..), Symbol(..),
         getMeta, setMeta, modifyMeta, onStack
     ) where
 
