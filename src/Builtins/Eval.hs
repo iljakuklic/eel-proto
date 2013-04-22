@@ -33,7 +33,45 @@ instance Evaluable (FunctionDef Meta) where
 
 -- | Builtin evaluation
 instance Evaluable BuiltIn where
+
+    -- fixed point combinator
+    eval BIfix = do
+        funq@(TQuot m0 fun) <- pop
+        let m = m0 %% m0
+        push (TQuot m . TComp m funq . TFunc m $ Symbol "fix")
+        eval fun
+
+    -- evaluate quotation one element below the stack top
+    eval BIdip = do
+        TQuot _ f <- pop
+        x <- pop
+        eval f
+        push x
+
+    -- select (sum type deconstructor)
+    eval BIsel = do
+        TQuot _ fb <- pop
+        TQuot _ fa <- pop
+        x <- pop
+        case x of
+            (TSumA _ a) -> do push a; eval fa
+            (TSumB _ b) -> do push b; eval fb
+            _ -> error ("Sum type is not either Left or Right: " ++ show x)
+
+    -- let binding
     eval BIlet     = error "Let not implemented"
+
+    -- function definition
+    eval BIdef = do
+        name <- termToString <$> pop
+        TQuot _ body' <- pop
+        env <- pTypeTable
+        let body = infer env body'
+        case termType body of
+            Left err -> fail ("ERROR while inferring type for function '" ++ name ++ "': " ++ show err)
+            Right _  -> addFunc (Symbol name) (FDUser body)
+
+    -- define a grammar rule
     eval BIdefrulepri = do
         TInt _ prio <- pop
         name <- termToString <$> pop
@@ -43,27 +81,11 @@ instance Evaluable BuiltIn where
         case termType body of
             Left err -> fail ("ERROR while inferring type for nonterminal '" ++ name ++ "': " ++ show err)
             Right _  -> addRule (Symbol name) prio body
+
+    -- grammar nonterminal parsing invokation
     eval BIinvoke  = pop >>= (invoke . Symbol . termToString)
-    eval BIdef = do
-        name <- termToString <$> pop
-        TQuot _ body' <- pop
-        env <- pTypeTable
-        let body = infer env body'
-        case termType body of
-            Left err -> fail ("ERROR while inferring type for function '" ++ name ++ "': " ++ show err)
-            Right _  -> addFunc (Symbol name) (FDUser body)
-    eval BIfix = do
-        funq@(TQuot m0 fun) <- pop
-        let m = m0 %% m0
-        push (TQuot m . TComp m funq . TFunc m $ Symbol "fix")
-        eval fun
-    eval BIdip = do TQuot _ f <- pop; x <- pop; eval f; push x
-    eval BIsel = do
-        TQuot _ fb <- pop; TQuot _ fa <- pop; x <- pop
-        case x of
-            (TSumA _ a) -> do push a; eval fa
-            (TSumB _ b) -> do push b; eval fb
-            _ -> error ("Sum type is not either Left or Right: " ++ show x)
+
+    -- evaluate a function without side effects (parsing, function definitions etc.)
     eval bi = evalPure (evalP bi)
       where
         -- Combinators
