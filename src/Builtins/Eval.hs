@@ -23,7 +23,7 @@ invoke = invokeUsing eval
 -- | Term evaluation
 instance Evaluable (Term Meta) where
     eval t@(TFunc _ f) = checkAppliable t >> lookupFunc f >>= eval
-    eval (TComp _ f g) = eval f >> eval g
+    eval t@(TComp _ f g) = checkAppliable t >> eval f >> eval g
     eval q = push q
 
 -- | Function definition evaluation

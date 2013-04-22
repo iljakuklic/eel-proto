@@ -68,10 +68,10 @@ modifyMeta f t = setMeta t . f $ getMeta t
 onStack f stk = Stack (f (let Stack s = stk in s))
 
 instance Show (Term m) where
-    show (TFunc  _ (Symbol "id"))   = ""
+    --show (TFunc  _ (Symbol "id"))   = ""
     show (TFunc  _ f)   = show f
     show (TComp  _ f g) = show f ++ " " ++ show g
-    show (TQuot  _ q)   = "[ " ++ show q ++ "]"
+    show (TQuot  _ q)   = "[ " ++ show q ++ " ]"
     show (TInt   _ x)   = show x
     show (TFloat _ x)   = show x
     show (TChar  _ x)   = show x
