@@ -7,6 +7,7 @@ import Sema.Infer
 import Parser.State
 import Parser.Eval
 import Builtins.Conversions
+import Control.Applicative
 
 import Data.Char
 import Text.Parsec(Stream, ParsecT)
@@ -33,14 +34,24 @@ instance Evaluable (FunctionDef Meta) where
 -- | Builtin evaluation
 instance Evaluable BuiltIn where
     eval BIlet     = error "Let not implemented"
-    eval BIdefrule = error "Custom rule definition not implemented"
-    eval BIinvoke  = pop >>= (invoke . Symbol . termToString) >> return ()
-    eval BIdef = do
-        name <- pop; TQuot _ body' <- pop; env <- pTypeTable;
+    eval BIdefrulepri = do
+        TInt _ prio <- pop
+        name <- termToString <$> pop
+        TQuot _ body' <- pop
+        env <- pTypeTable
         let body = infer env body'
         case termType body of
-            Left err -> fail ("ERROR while inferring type for '" ++ termToString name ++ "': " ++ show err)
-            Right _  -> addFunc (Symbol $ termToString name) (FDUser body)
+            Left err -> fail ("ERROR while inferring type for nonterminal '" ++ name ++ "': " ++ show err)
+            Right _  -> addRule (Symbol name) prio body
+    eval BIinvoke  = pop >>= (invoke . Symbol . termToString)
+    eval BIdef = do
+        name <- termToString <$> pop
+        TQuot _ body' <- pop
+        env <- pTypeTable
+        let body = infer env body'
+        case termType body of
+            Left err -> fail ("ERROR while inferring type for function '" ++ name ++ "': " ++ show err)
+            Right _  -> addFunc (Symbol name) (FDUser body)
     eval BIfix = do
         funq@(TQuot m0 fun) <- pop
         let m = m0 %% m0
