@@ -1,8 +1,11 @@
 
 module Parser.State (
+        -- * Types
         PState(..), Meta(..), TypeInfo(..), PosInfo(..),
+        -- * Metadata manipulation
         (%%), mEps, mergePos, termSetPos, termModifyType, termType, termInferredType,
-        lookupFunc, pTypeTable, pTypeTablePure
+        -- * State manipulation
+        getState, lookupFunc, pTypeTable, pTypeTablePure
     ) where
 
 import Parser.Rule
