@@ -1,7 +1,8 @@
 
-module Backend.Eval (
-        Evaluable, eval,
-        evalPure, push, pop, addRule, addFunc,
+module Parser.Eval (
+        -- * Term evaluation
+        Evaluable, eval, evalPure, push, pop, addRule, addFunc,
+        -- * Type manipulation
         stackType, checkAppliable
     ) where
 
@@ -27,8 +28,11 @@ push x = evalPure (\stk -> x : stk)
 -- | Pop value from the stack
 pop    = do
     Stack s1 <- pStack <$> getState
-    evalPure (\(_:stk) -> stk)
+    evalPure pop'
     return (head s1)
+  where
+    pop' (_:stk) = stk
+    pop' []      = error "Popping stack bottom"
 
 -- | Add a rule to the rule table
 addRule nt pri rhs = modifyState (\ste -> ste { pRules = updateRT (pRules ste) } )

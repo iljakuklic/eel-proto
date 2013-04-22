@@ -54,6 +54,9 @@ data BuiltIn
      -- Compiler functions
      | BIdef           -- ^ define a function
      | BIlet           -- ^ let binding
+     -- Parser functions
+     | BIdefrule       -- ^ define grammar rule
+     | BIinvoke        -- ^ invoke grammar rule
      deriving (Show, Bounded, Enum, Eq)
 
 

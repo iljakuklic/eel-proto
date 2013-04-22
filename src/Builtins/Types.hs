@@ -86,4 +86,7 @@ builtInType BIwritefile = [a, tString, tString] ~~> [a, tBool]
 -- Compiler funcs
 builtInType BIdef    = [a, fun e [b] [c], tString] ~+> [a]
 builtInType BIlet    = [a, fun e [b] [c], tString] ~+> [c]
+-- Parsing functions
+builtInType BIdefrule = [a, [b] ~*> [c], tString] ~~> [a]
+builtInType BIinvoke  = [a, tString] ~~> [b]
 

@@ -7,7 +7,7 @@ import Sema.Term
 import Sema.Symbol
 import Sema.Infer
 import Parser.State
-import Backend.Eval
+import Parser.Eval
 import Builtins.Conversions
 
 import Data.Char
@@ -27,7 +27,9 @@ instance Evaluable (FunctionDef Meta) where
 
 -- builtin invokation
 instance Evaluable BuiltIn where
-    eval BIlet = error "Let not implemented"
+    eval BIlet     = error "Let not implemented"
+    eval BIdefrule = error "Custom rule definition not implemented"
+    eval BIinvoke  = error "Grammar rule invokation not implemented"
     eval BIdef = do
         name <- pop; TQuot _ body' <- pop; env <- pTypeTable;
         let body = infer env body'
