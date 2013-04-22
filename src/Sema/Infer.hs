@@ -31,6 +31,8 @@ substComp s1 s2 = (M.union s2 (fmap (subst s2) s1))
 -- | Type unification
 --unify :: (Ord v, MonadError (TypeError v) m) => Type v -> Type v -> m (M.Map v (Type v))
 unify u v | u == v = return M.empty
+unify (TyPhase TyCompile) (TyPhase TyParse) = return M.empty
+unify (TyPhase TyParse) (TyPhase TyCompile) = return M.empty
 unify (TyVar v) t = if v `notElem` t
     then return (M.singleton v t)
     else throwError (SEOccurs v t)
