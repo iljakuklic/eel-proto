@@ -88,7 +88,7 @@ instance Evaluable BuiltIn where
     eval BIppchar = do
         TInt _ hi <- pop
         TInt _ lo <- pop
-        char' <- satisfy (\ch -> let asciicode = ord ch in lo <= asciicode && asciicode <= hi)
+        char' <- satisfy (\ch -> lo <= ord ch && ord ch <= hi)
         push $ TChar mEps char'
 
     -- failing primitive parser
