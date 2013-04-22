@@ -22,7 +22,7 @@ import qualified Data.Map as M
 -- | Perser-evaluable expression-like structures
 class Evaluable expr where
     -- | Evaluate given expression in Parsec monad
-    eval :: Monad m => expr -> ParsecT s (PState Meta) m ()
+    eval :: (Stream s m Char, Monad m) => expr -> ParsecT s (PState Meta) m ()
 
 -- | Evaluate a pure function (mapping a stact to a stack) in Parsec monad
 evalPure f = modifyState (\ste -> ste { pStack = onStack f (pStack ste) } )

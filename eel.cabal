@@ -50,7 +50,7 @@ executable eel
   -- other-modules:       
 
   -- Haskell extensions in use
-  extensions:          NoMonomorphismRestriction
+  extensions:          NoMonomorphismRestriction, FlexibleInstances, FlexibleContexts
 
   -- Turn on some warnings
   ghc-options:         -Wall -fno-warn-missing-signatures -fno-warn-orphans

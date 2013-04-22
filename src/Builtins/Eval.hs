@@ -1,7 +1,5 @@
 
-{-# LANGUAGE FlexibleInstances #-}
-
-module Builtins.Eval (eval) where
+module Builtins.Eval (eval, invoke) where
 
 import Sema.Term
 import Sema.Symbol
@@ -11,25 +9,32 @@ import Parser.Eval
 import Builtins.Conversions
 
 import Data.Char
+import Text.Parsec(Stream, ParsecT)
 
 e = mEps
 
--- term evaluation
+-- | Invoke grammar rule parsing using the default evaluation engine
+invoke :: Stream s m Char
+       => Symbol                        -- ^ non-terminal symbol
+       -> ParsecT s (PState Meta) m ()  -- ^ parser for the symbol
+invoke = invokeUsing eval
+
+-- | Term evaluation
 instance Evaluable (Term Meta) where
     eval t@(TFunc _ f) = checkAppliable t >> lookupFunc f >>= eval
     eval (TComp _ f g) = eval f >> eval g
     eval q = push q
 
--- function definition
+-- | Function definition evaluation
 instance Evaluable (FunctionDef Meta) where
     eval (FDBuiltIn bi) = eval bi
     eval (FDUser term)  = eval term
 
--- builtin invokation
+-- | Builtin evaluation
 instance Evaluable BuiltIn where
     eval BIlet     = error "Let not implemented"
     eval BIdefrule = error "Custom rule definition not implemented"
-    eval BIinvoke  = error "Grammar rule invokation not implemented"
+    eval BIinvoke  = pop >>= (invoke . Symbol . termToString) >> return ()
     eval BIdef = do
         name <- pop; TQuot _ body' <- pop; env <- pTypeTable;
         let body = infer env body'
