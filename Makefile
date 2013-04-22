@@ -13,7 +13,7 @@ dist:
 	cabal configure
 
 $(DOC): dist $(HSFILES)
-	cabal haddock --executables
+	cabal haddock --executables --internal
 
 dist/build/eel/eel: dist $(HSFILES)
 	cabal build
