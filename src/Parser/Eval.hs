@@ -1,15 +1,19 @@
 
 module Parser.Eval (
         -- * Term evaluation
-        Evaluable, eval, evalPure, push, pop, addRule, addFunc,
+        Evaluable, eval, evalPure, push, pop, addFunc,
+        -- * Parsing engine manipulation
+        addRule, invokeUsing,
         -- * Type manipulation
         stackType, checkAppliable
     ) where
 
 import Sema.Term
 import Sema.Types
-import Parser.State
 import Sema.Infer
+import Sema.Symbol
+import Parser.State
+import Parser.Rule
 
 import Text.Parsec
 import Control.Applicative
@@ -59,3 +63,13 @@ addFunc name term = do
     case (M.lookup name st) of
         Just _ -> fail ("Symbol already defined: '" ++ show name ++ "'")
         Nothing -> setState (ste { pSymTable = M.insert name term st })
+
+-- | Invoke grammar rule given by the symbol of the corresponding non-terminal
+invokeUsing :: Stream s m t
+            => (Production Meta -> ParsecT s (PState Meta) m b)
+                                            -- ^ monadic evaluator to process the term
+            -> Symbol                       -- ^ non-terminal to parse
+            -> ParsecT s (PState Meta) m b  -- ^ resulting parsing monad
+invokeUsing evaluator sym = do
+    rulz <- pRules <$> getState
+    parserForRule evaluator rulz sym
