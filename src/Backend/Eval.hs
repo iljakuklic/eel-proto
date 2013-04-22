@@ -1,11 +1,14 @@
 
 module Backend.Eval (
         Evaluable, eval,
-        evalPure, push, pop, addRule, addFunc
+        evalPure, push, pop, addRule, addFunc,
+        stackType, checkAppliable
     ) where
 
 import Sema.Term
+import Sema.Types
 import Parser.State
+import Sema.Infer
 
 import Text.Parsec
 import Control.Applicative
@@ -30,6 +33,20 @@ pop    = do
 -- | Add a rule to the rule table
 addRule nt pri rhs = modifyState (\ste -> ste { pRules = updateRT (pRules ste) } )
     where updateRT = M.insertWith (M.unionWith (++)) nt (M.singleton pri [rhs])
+
+-- | Get the type of current stack
+stackType = do
+    stk <- pStack <$> getState
+    env <- pTypeTable
+    return $ stackInfer env stk
+
+-- | Check if a term (a function) is appliabe to current stack
+checkAppliable term = do
+    st <- stackType
+    env <- pTypeTable
+    case coerceToInput env (Just TyCompile) st term of
+        Right term' -> return term'
+        Left err -> fail (show err)
 
 -- | Add a function to the symbol table
 addFunc name term = do

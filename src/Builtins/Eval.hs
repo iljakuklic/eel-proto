@@ -16,7 +16,7 @@ e = mEps
 
 -- term evaluation
 instance Evaluable (Term Meta) where
-    eval (TFunc _ f) = lookupFunc f >>= eval
+    eval t@(TFunc _ f) = checkAppliable t >> lookupFunc f >>= eval
     eval (TComp _ f g) = eval f >> eval g
     eval q = push q
 
