@@ -33,7 +33,7 @@ generateParser :: Stream s m t
                -> [[a]]                   -- ^ list of productions as returned by 'matchRules'
                -> ParsecT s u m b         -- ^ resulting parser
 generateParser evaluator = choice . map inner
-    where inner = choice . map (try . evaluator)
+    where inner = try . choice . map evaluator
 
 -- | generate a parser with name
 generateNamedParser name evaluator prods = generateParser evaluator prods <?> name
