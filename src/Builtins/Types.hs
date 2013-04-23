@@ -90,5 +90,5 @@ builtInType BIdefrulepri = [a, [b] ~*> [c], tString, tInt] ~+> [a]
 builtInType BIinvoke     = [a, tString] ~*> [b]
 builtInType BIpromote    = [a, tString] ~+> [a, [b] ~~> [c]]
 -- Primitive parsers
-builtInType BIppchar = [a, tInt, tInt] ~*> [a, tChar]
+builtInType BIppchar = [a, tChar, tChar] ~*> [a, tChar]
 builtInType BIppfail = [a, tString] ~*> [b]

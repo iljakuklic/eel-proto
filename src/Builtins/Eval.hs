@@ -92,9 +92,9 @@ instance Evaluable BuiltIn where
 
     -- primitive parser for single character
     eval BIppchar = do
-        TInt _ hi <- pop
-        TInt _ lo <- pop
-        char' <- satisfy (\ch -> lo <= ord ch && ord ch <= hi)
+        TChar _ hi <- pop
+        TChar _ lo <- pop
+        char' <- satisfy (\ch -> lo <= ch && ch <= hi)
         push $ TChar mEps char'
 
     -- failing primitive parser
