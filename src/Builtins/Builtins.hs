@@ -56,7 +56,7 @@ data BuiltIn
      | BIlet           -- ^ let binding
      | BIpromote       -- ^ lookup a function from a string
      -- Parser functions
-     | BIdefrulepri    -- ^ define grammar rule
+     | BIdefrule       -- ^ define grammar rule
      | BIinvoke        -- ^ invoke grammar rule
      -- Primitive parsers
      | BIppchar        -- ^ read a char (within a ASCII range) from the source

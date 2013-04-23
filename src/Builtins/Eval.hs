@@ -9,7 +9,7 @@ import Builtins.Conversions
 import Control.Applicative
 
 import Data.Char
-import Text.Parsec(Stream, ParsecT, satisfy)
+import Text.Parsec(Stream, ParsecT, try, anyChar)
 
 e = mEps
 
@@ -77,7 +77,7 @@ instance Evaluable BuiltIn where
         push (TQuot mEps . TFunc mEps $ name)
 
     -- define a grammar rule
-    eval BIdefrulepri = do
+    eval BIdefrule = do
         TInt _ prio <- pop
         name <- termToString <$> pop
         TQuot _ body' <- pop
@@ -92,10 +92,13 @@ instance Evaluable BuiltIn where
 
     -- primitive parser for single character
     eval BIppchar = do
-        TChar _ hi <- pop
-        TChar _ lo <- pop
-        char' <- satisfy (\ch -> lo <= ch && ch <= hi)
-        push $ TChar mEps char'
+        TQuot _ fq <- pop
+        try $ do
+            ch <- anyChar
+            push (TChar mEps ch)
+            eval fq
+            TSumA _ _ <- pop
+            return ()
 
     -- failing primitive parser
     eval BIppfail = pop >>= fail . ("User error: " ++) . termToString

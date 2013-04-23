@@ -83,12 +83,12 @@ builtInType BIputchar   = [a, tChar] ~~> [a]
 builtInType BIreadfile  = [a, tString] ~~> [a, tMaybe tString]
 builtInType BIwritefile = [a, tString, tString] ~~> [a, tBool]
 -- Compiler funcs
-builtInType BIdef    = [a, fun e [b] [c], tString] ~+> [a]
-builtInType BIlet    = [a, fun e [b] [c], tString] ~+> [c]
+builtInType BIdef     = [a, fun e [b] [c], tString] ~+> [a]
+builtInType BIlet     = [a, fun e [b] [c], tString] ~+> [c]
+builtInType BIpromote = [a, tString] ~+> [a, [b] ~~> [c]]
 -- Parsing functions
-builtInType BIdefrulepri = [a, [b] ~*> [c], tString, tInt] ~+> [a]
-builtInType BIinvoke     = [a, tString] ~*> [b]
-builtInType BIpromote    = [a, tString] ~+> [a, [b] ~~> [c]]
+builtInType BIdefrule = [a, [b] ~*> [c], tString, tInt] ~+> [a]
+builtInType BIinvoke  = [a, tString] ~*> [b]
 -- Primitive parsers
-builtInType BIppchar = [a, tChar, tChar] ~*> [a, tChar]
+builtInType BIppchar = [a, [a, tChar] ~+> [b, tBool]] ~*> [b]
 builtInType BIppfail = [a, tString] ~*> [b]
