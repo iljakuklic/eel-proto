@@ -70,6 +70,12 @@ instance Evaluable BuiltIn where
             Left err -> fail ("ERROR while inferring type for function '" ++ name ++ "': " ++ show err)
             Right _  -> addFunc (Symbol name) (FDUser body)
 
+    -- function lookup from a string
+    eval BIpromote = do
+        name <- Symbol . termToString <$> pop
+        _    <- lookupFunc name
+        push (TQuot mEps . TFunc mEps $ name)
+
     -- define a grammar rule
     eval BIdefrulepri = do
         TInt _ prio <- pop

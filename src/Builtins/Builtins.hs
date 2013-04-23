@@ -54,6 +54,7 @@ data BuiltIn
      -- Compiler functions
      | BIdef           -- ^ define a function
      | BIlet           -- ^ let binding
+     | BIpromote       -- ^ lookup a function from a string
      -- Parser functions
      | BIdefrulepri    -- ^ define grammar rule
      | BIinvoke        -- ^ invoke grammar rule
