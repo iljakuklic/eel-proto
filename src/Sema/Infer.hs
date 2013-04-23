@@ -173,8 +173,7 @@ inferTerm env (TComp m f g) = setType' anyFunc (TComp m f' g') (join (inferCompo
     where (f', ft) = inferTerm env f; (g', gt) = inferTerm env g
 inferTerm env (TQuot m f) = setType' (inferLiteral anyFunc) (TQuot m f') (inferLiteral <$> ft)
     where (f', ft) = inferTerm env f
-inferTerm env fun@(TFunc _ f) = setType' anyFunc fun ft
-    where ft = maybe (Left $ SESymbol f) id (M.lookup f env)
+inferTerm _env fun@(TFunc _ _ funDef) = setType' anyFunc fun (functionDefType funDef)
 inferTerm env term = setType' anyFunc term' (inferLiteral <$> ty)
     where (term', ty) = inferVal env term
 
@@ -182,7 +181,7 @@ inferTerm env term = setType' anyFunc term' (inferLiteral <$> ty)
 inferVal _env t | hasType' tyMeta = (t, getType' tyMeta)
     where tyMeta = mType . getMeta $ t
 inferVal env   (TQuot _ t)    = inferTerm env t
-inferVal env t@(TFunc _ _)    = inferTerm env t
+inferVal env t@(TFunc _ _ _)  = inferTerm env t
 inferVal env t@(TComp _ _ _)  = inferTerm env t
 inferVal _   t@(TUnit _)      = setType'' t tUnit
 inferVal _   t@(TInt  _ _)    = setType'' t tInt
@@ -201,9 +200,9 @@ inferVal env (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
     where (b', bt) = inferVal env b
 
 -- | Get the type of a stack
-stackInfer env (Stack stk) = case either err id stkType of (TyBin _ _ (TyBin _ _ t)) -> niceTyVars t; _ -> err
+stackInfer _env (Stack stk) = err -- case either err id stkType of (TyBin _ _ (TyBin _ _ t)) -> niceTyVars t; _ -> err
   where
-    stkTerm = fmap (%% mEps) $ Data.List.foldr (flip $ TPair mEps) (TUnit mEps) stk
-    stkType = getType' . mType . getMeta . infer env $ stkTerm
+    --stkTerm = fmap (%% mEps) $ Data.List.foldr (flip $ TPair mEps) (TUnit mEps) stk
+    --stkType = getType' . mType . getMeta . infer env $ stkTerm
     --stkType = getType' . mType . getMeta . fst . inferVal env $ stkTerm
     err = error ("Incorrect stack type!!!\n" ++ show (Stack stk))

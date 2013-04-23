@@ -22,7 +22,7 @@ invoke = invokeUsing eval
 -- | Term evaluation
 instance Evaluable (Term Meta) where
     -- disable typechecking for now due to performance issues
-    eval t@(TFunc _ f)   = {- checkAppliable t >> -} lookupFunc f >>= eval
+    eval t@(TFunc _ _ f) = {- checkAppliable t >> -} eval f
     eval t@(TComp _ f g) = {- checkAppliable t >> -} eval f >> eval g
     eval q = push q
 
@@ -38,7 +38,7 @@ instance Evaluable BuiltIn where
     eval BIfix = do
         funq@(TQuot m0 fun) <- pop
         let m = m0 %% m0
-        push (TQuot m . TComp m funq . TFunc m $ Symbol "fix")
+        push (TQuot m . TComp m funq $ TFunc m (Symbol "fix") (FDBuiltIn BIfix))
         eval fun
 
     -- evaluate quotation one element below the stack top
@@ -74,8 +74,8 @@ instance Evaluable BuiltIn where
     -- function lookup from a string
     eval BIpromote = do
         name <- Symbol . termToString <$> pop
-        _    <- lookupFunc name
-        push (TQuot mEps . TFunc mEps $ name)
+        term <- lookupFunc name
+        push (TQuot mEps $ TFunc mEps name term)
 
     -- define a grammar rule
     eval BIdefrule = do

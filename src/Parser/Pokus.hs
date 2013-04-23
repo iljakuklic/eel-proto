@@ -25,11 +25,12 @@ ptok p = p <* skip
 pstok = ptok . string
 psbet a b = between (pstok a) (pstok b)
 pterm = ploc (TComp e <$> pfunc <*> pterm
-     <|> pure (TFunc e (Symbol "id")))
+     <|> pure (TFunc e (Symbol "id") (FDBuiltIn BIid)))
 pfunc = ploc (TInt e . read <$> ptok (many1 digit)
-     <|> TFunc e <$> (ptok psymb)
+     <|> pfuncall
      <|> TQuot e <$> psbet "[" "]" pterm
      <|> psbet "'" "'" pstr)
+pfuncall = do sym <- ptok psymb; term <- lookupFunc sym; return (TFunc e sym term)
 pstr  = ploc (TList e <$> many pchr)
 pchr  = TChar e <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape seqs
 psymb = Symbol <$> many1 (satisfy (\c -> isAlpha c || c `elem` "0123456789+-*/.:&^%$#@!<>="))

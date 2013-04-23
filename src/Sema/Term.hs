@@ -12,7 +12,7 @@ import Builtins.Builtins
 
 -- | Term Representation
 data Term m
-     = TFunc  m (Symbol)            -- ^ function invokation
+     = TFunc  m (Symbol) (FunctionDef m)  -- ^ function invokation
      | TComp  m (Term m) (Term m)   -- ^ function composition
      | TQuot  m (Term m)            -- ^ anonymous function quotation
      | TInt   m Int                 -- ^ integer value
@@ -36,7 +36,7 @@ type SymTable m = M.Map Symbol (FunctionDef m)
 newtype Stack m = Stack [Term m]
 
 -- | get term metadata
-getMeta (TFunc  m _)   = m
+getMeta (TFunc  m _ _) = m
 getMeta (TComp  m _ _) = m
 getMeta (TQuot  m _)   = m
 getMeta (TInt   m _)   = m
@@ -49,7 +49,7 @@ getMeta (TList  m _)   = m
 getMeta (TUnit  m)     = m
 
 -- | set term metadata
-setMeta (TFunc  _ a)   m = TFunc  m a
+setMeta (TFunc  _ a b) m = TFunc  m a b
 setMeta (TComp  _ a b) m = TComp  m a b
 setMeta (TQuot  _ a)   m = TQuot  m a
 setMeta (TInt   _ a)   m = TInt   m a
@@ -69,7 +69,7 @@ onStack f stk = Stack (f (let Stack s = stk in s))
 
 instance Show (Term m) where
     --show (TFunc  _ (Symbol "id"))   = ""
-    show (TFunc  _ f)   = show f
+    show (TFunc  _ f _) = show f
     show (TComp  _ f g) = show f ++ " " ++ show g
     show (TQuot  _ q)   = "[ " ++ show q ++ " ]"
     show (TInt   _ x)   = show x
@@ -81,6 +81,7 @@ instance Show (Term m) where
     show (TList  _ xs)  = "("  ++ show xs ++ ")"
     show (TUnit  _)     = "#"
 
+{-
 instance Functor Term where
     fmap f (TFunc  m a)   = TFunc  (f m) a
     fmap f (TComp  m a b) = TComp  (f m) (fmap f a) (fmap f b)
@@ -93,6 +94,7 @@ instance Functor Term where
     fmap f (TPair  m a b) = TPair  (f m) (fmap f a) (fmap f b)
     fmap f (TList  m as)  = TList  (f m) (fmap (fmap f) as)
     fmap f (TUnit  m)     = TUnit  (f m)
+-}
 
 instance Show (Stack m) where
     show (Stack s) = "$" ++ show (reverse s) ++ "$"

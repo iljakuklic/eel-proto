@@ -3,9 +3,9 @@ module Parser.State (
         -- * Types
         PState(..), Meta(..), TypeInfo(..), PosInfo(..),
         -- * Metadata manipulation
-        (%%), mEps, mergePos, termSetPos, termModifyType, termType, termInferredType,
+        (%%), mEps, mergePos, termSetPos, termModifyType, termType, termInferredType, functionDefType,
         -- * State manipulation
-        getState, lookupFunc, pTypeTable, pTypeTablePure
+        getState, lookupFunc, pTypeTable, pTypeTablePure, 
     ) where
 
 import Parser.Rule
@@ -72,6 +72,10 @@ termType term = case mType (getMeta term) of
     _ -> error "Type not inferred"
 -- | get inferred type (one the term should have provided it typechecked)
 termInferredType term = case mType (getMeta term) of HasType _ t -> Just t; _ -> Nothing
+
+-- | Function definition type
+functionDefType (FDUser t)     = termType t
+functionDefType (FDBuiltIn bi) = return $ builtInType bi
 
 -- | get table mapping symbols to types
 pTypeTable = pTypeTablePure <$> getState
