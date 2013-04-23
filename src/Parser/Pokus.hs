@@ -27,7 +27,7 @@ psbet a b = between (pstok a) (pstok b)
 pterm = ploc (TComp e <$> pfunc <*> pterm
      <|> pure (TFunc e (Symbol "id")))
 pfunc = ploc (TInt e . read <$> ptok (many1 digit)
-     <|> TFunc e <$> (ptok psymb >>= (\s -> s <$ lookupFunc s))
+     <|> TFunc e <$> (ptok psymb)
      <|> TQuot e <$> psbet "[" "]" pterm
      <|> psbet "'" "'" pstr)
 pstr  = ploc (TList e <$> many pchr)

@@ -134,8 +134,9 @@ inferCoerce' (TList m xs) (TyList txs) = do
 inferCoerce' t _ty = return t
 
 -- | Main type inference engine
-infer env term = either err id (inferAndCoerce getTypeI env term)
-  where err e = error ("Inference recosntruction error: " ++ show e ++ "\nTerm: " ++ show term)
+infer env = fst . inferTerm env
+--infer env term = either err id (inferAndCoerce getTypeI env term)
+--  where err e = error ("Inference recosntruction error: " ++ show e ++ "\nTerm: " ++ show term)
 
 -- | infer type and force it to particular subtype
 coerce ty env term = inferAndCoerce (const ty) env term

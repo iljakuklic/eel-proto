@@ -30,12 +30,9 @@ evalPure f = modifyState (\ste -> ste { pStack = onStack f (pStack ste) } )
 push x = evalPure (\stk -> x : stk)
 -- | Pop value from the stack
 pop    = do
-    Stack s1 <- pStack <$> getState
-    evalPure pop'
-    return (head s1)
-  where
-    pop' (_:stk) = stk
-    pop' []      = error "Popping stack bottom"
+    Stack (top:rest) <- pStack <$> getState
+    evalPure (const rest)
+    return top
 
 -- | Add a rule to the rule table
 addRule nt pri rhs = modifyState (\ste -> ste { pRules = updateRT (pRules ste) } )
