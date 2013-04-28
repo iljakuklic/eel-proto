@@ -4,8 +4,8 @@ module Parser.State (
         PState(..), Meta(..), TypeInfo(..), PosInfo(..),
         -- * Metadata manipulation
         (%%), mEps, mergePos, termSetPos, termModifyType, termType, termInferredType, functionDefType,
-        -- * State manipulation
-        getState, lookupFunc, pTypeTable, pTypeTablePure, 
+        -- * State retrieval
+        getState, lookupFunc, pTypeTable, pTypeTablePure, lookupParser
     ) where
 
 import Parser.Rule
@@ -19,12 +19,11 @@ import Control.Applicative
 import qualified Data.Map as M
 
 -- | Parser state
-data PState m = PState {
-        pSymTable :: SymTable m,  -- ^ symbol table
-        pRules    :: RuleTable m, -- ^ rule table
-        pStack    :: Stack m      -- ^ evaluation stack contents
+data PState s c m = PState {
+        pSymTable :: SymTable m,    -- ^ symbol table
+        pRules    :: RuleTable m (Parsec s (PState s c m) ()), -- ^ rule table
+        pStack    :: Stack m        -- ^ evaluation stack contents
     }
-    deriving (Show)
 
 -- | Type structure specialisation used in metadata
 type MType = Type Symbol
@@ -90,3 +89,6 @@ lookupFunc sym = do
     case M.lookup sym st of
         Just fn -> return fn
         Nothing -> fail ("Not in scope: " ++ show sym)
+
+-- | Lookup parser by nonterminal name
+lookupParser sym = getState >>= flip getParserForRule sym . pRules

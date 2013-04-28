@@ -5,19 +5,27 @@ import Sema.Term
 import Sema.Infer
 import Parser.State
 import Parser.Eval
+import Parser.Rule
 import Builtins.Conversions
 import Control.Applicative
 
 import Data.Char
-import Text.Parsec(Stream, ParsecT, try, anyChar)
+import qualified Data.Map as M
+import Text.Parsec(try, anyChar, modifyState)
 
 e = mEps
 
--- | Invoke grammar rule parsing using the default evaluation engine
-invoke :: Stream s m Char
-       => Symbol                        -- ^ non-terminal symbol
-       -> ParsecT s (PState Meta) m ()  -- ^ parser for the symbol
-invoke = invokeUsing eval
+invoke nt = lookupParser nt >>= id
+
+addRule nt@(Symbol name) pri rhs = modifyState (\ste -> ste { pRules = updateRT (pRules ste) } )
+  where
+    updateRT oldRules = M.insert nt (RuleCache newDefs newParser) oldRules
+      where
+        err1 = error "old parser referenced"
+        RuleCache oldDefs _ = M.findWithDefault (RuleCache M.empty err1) nt oldRules
+        newDefs = M.insertWith (++) pri [rhs] oldDefs
+        newParser = generateNamedParser name eval (map snd $ M.toDescList newDefs)
+
 
 -- | Term evaluation
 instance Evaluable (Term Meta) where

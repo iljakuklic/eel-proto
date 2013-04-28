@@ -36,7 +36,7 @@ pchr  = TChar e <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape se
 psymb = Symbol <$> many1 (satisfy (\c -> isAlpha c || c `elem` "0123456789+-*/.:&^%$#@!<>="))
 peval = () <$ many ((pfunc >>= eval) <|> pext)
 ptop  = skip >> (peval) >> eof >> getState
-pext  = string "~~~" >> skip >> invoke (Symbol "ext") >> many anyChar >> return ()
+pext  = string "~~~" >> skip >> invoke (Symbol "ext") >> skip >> return ()
 skip  = many ((space >> return ()) <|> (try (string "//") >> (anyChar `manyTill` eol) >> return ()))
 eol   = (char '\n' >> return ()) <|> eof
 ploc innerP = do
@@ -53,7 +53,7 @@ testparse str =
         Left err  -> putStrLn (show err)
         Right ste -> printFuncs ste >> putStrLn "-----------------" >> printStack ste
 
-printFuncs :: PState Meta -> IO ()
+printFuncs :: PState s c Meta -> IO ()
 printFuncs (PState st _ _) = sequence_ [ printFunc n f | (n, f) <- M.toList st]
 printFunc  n (FDUser    d) = printFunc' n (either show show $ termType d) (show d)
 printFunc  n (FDBuiltIn b) = printFunc' n (show $ builtInType b) "<<built-in>>"
