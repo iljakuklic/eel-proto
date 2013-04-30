@@ -106,8 +106,10 @@ instance Evaluable BuiltIn where
             ch <- anyChar
             push (TChar mEps ch)
             eval fq
-            TSumA _ _ <- pop
-            return ()
+            result <- pop
+            case result of
+                TSumA _ _ -> return ()
+                _ -> fail ("Unexpected character " ++ show ch)
 
     -- failing primitive parser
     eval BIppfail = pop >>= fail . ("User error: " ++) . termToString
