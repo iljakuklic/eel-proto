@@ -28,11 +28,15 @@ clean:
 	rm -f eel
 	cabal clean
 
+profrun: eel
+	./eel test.eel +RTS -i0.005 -hy -p
+	hp2ps -c eel.hp
+
 prof:
-	cabal configure --enable-executable-profiling --ghc-option=-prof --ghc-option=-auto --ghc-option=-rtsopts
+	cabal configure --enable-executable-profiling --ghc-option=-prof --ghc-option=-auto-all --ghc-option=-rtsopts
 
 wc:
 	wc samples/*.* lib/*.eel
 	wc src/*.hs src/*/*.hs
 
-.PHONY: prof clean top doc docs readdoc repl wc prof
+.PHONY: prof clean top doc docs readdoc repl wc prof profrun
