@@ -2,7 +2,7 @@
 module Sema.Term (
         Term(..), FunctionDef(..), BuiltIn(..),
         SymTable, Stack(..), Symbol(..),
-        getMeta, setMeta, modifyMeta, mapMeta, onStack
+        getMeta, setMeta, modifyMeta, mapMeta, onStack, isValue
     ) where
 
 import qualified Data.Map as M
@@ -38,7 +38,7 @@ newtype Stack m = Stack [Term m]
 -- | Check wether a term is a literal value
 isValue (TFunc _ _ _) = False
 isValue (TComp _ _ _) = False
-isValue (TQuot _ _  ) = False
+--isValue (TQuot _ _  ) = False
 isValue _             = True
 
 -- | get term metadata
