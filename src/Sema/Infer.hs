@@ -1,5 +1,5 @@
 
-module Sema.Infer (infer, coerce, coerceToInput, inferCoerce, stackInfer) where
+module Sema.Infer (infer, coerce, coerceToInput, inferCoerce, stackInfer, appliesTo, inferValueForce) where
 
 import Sema.Types
 import Sema.Error
@@ -199,10 +199,18 @@ inferVal env (TSumA m a) = setType' ta (TSumA m a') (unCollideT tSum <$> at <*> 
 inferVal env (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
     where (b', bt) = inferVal env b
 
+-- | Force value type re-inference
+inferValueForce env t = fst . inferVal  env . mapMeta (%% mEps) $ t
+
 -- | Get the type of a stack
-stackInfer _env (Stack stk) = err -- case either err id stkType of (TyBin _ _ (TyBin _ _ t)) -> niceTyVars t; _ -> err
+stackInfer env (Stack stk) = stkType' -- either err id stkType
   where
-    --stkTerm = fmap (%% mEps) $ Data.List.foldr (flip $ TPair mEps) (TUnit mEps) stk
-    --stkType = getType' . mType . getMeta . infer env $ stkTerm
-    --stkType = getType' . mType . getMeta . fst . inferVal env $ stkTerm
+    stkTerm = Data.List.foldr (flip $ TPair mEps) (TUnit mEps) stk
+    stkType = getType' . mType . getMeta . fst . inferVal env $ stkTerm
+    stkTypes = mapM (getType' . mType . getMeta . fst . inferVal env) stk
+    stkType' = Data.List.foldr (flip (unCollideT tProd)) tUnit (either err id stkTypes)
     err = error ("Incorrect stack type!!!\n" ++ show (Stack stk))
+
+-- | Check if given function applies to the stack
+appliesTo (TyBin (TyFunc _) fargs _) ty1 = unCollideT unify ty1 fargs
+appliesTo t _ty1 = error ("Applying a non-function: " ++ show t)

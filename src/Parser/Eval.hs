@@ -25,7 +25,8 @@ class Evaluable expr where
 evalPure f = modifyState (\ste -> ste { pStack = onStack f (pStack ste) } )
 
 -- | Push value onto the stack
-push x = evalPure (\stk -> x : stk)
+push x = do
+    evalPure (\stk -> stackify x : stk)
 -- | Pop value from the stack
 pop    = do
     Stack (top:rest) <- pStack <$> getState
@@ -38,13 +39,16 @@ stackType = do
     env <- pTypeTable
     return $ stackInfer env stk
 
--- | Check if a term (a function) is appliabe to current stack
-checkAppliable term = do
+-- | Check if a function is appliabe to the current stack
+checkAppliable def = do
     st <- stackType
-    env <- pTypeTable
-    case coerceToInput env (Just TyCompile) st term of
-        Right term' -> return term'
-        Left err -> fail (show err)
+    case functionDefType def of
+        Left _ -> fail ("Applying a bogus function, aborting.")
+        Right ft ->
+            case appliesTo ft st of
+                Right _ -> return ()
+                Left err -> fail (show err ++ " in " ++ show def ++
+                     "\nCannot apply function type " ++ show ft ++ " to stack type " ++ show st)
 
 -- | Add a function to the symbol table
 addFunc name term = do

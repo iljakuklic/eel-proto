@@ -36,7 +36,7 @@ pchr  = TChar e <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape se
 psymb = Symbol <$> many1 (satisfy (\c -> isAlpha c || c `elem` "0123456789+-*/.:&^%$#@!<>="))
 peval = () <$ many ((pfunc >>= eval) <|> pext)
 ptop  = skip >> (peval) >> eof >> getState
-pext  = string "~~~" >> skip >> invoke (Symbol "ext") >> skip >> return ()
+pext  = string "~~~" >> invoke (Symbol "ext") >> return ()
 skip  = many ((space >> return ()) <|> (try (string "//") >> (anyChar `manyTill` eol) >> return ()))
 eol   = (char '\n' >> return ()) <|> eof
 ploc innerP = do

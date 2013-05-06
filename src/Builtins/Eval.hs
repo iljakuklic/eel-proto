@@ -11,12 +11,14 @@ import Control.Applicative
 
 import Data.Char
 import qualified Data.Map as M
-import Text.Parsec(try, anyChar, modifyState)
+import Text.Parsec(try, anyChar, modifyState, Stream, Parsec)
+import Data.Functor.Identity
 
 e = mEps
 
 invoke nt = lookupParser nt >>= id
 
+addRule :: (Stream s Identity Char) => Symbol -> Int -> Term Meta -> Parsec s (PState s c Meta) ()
 addRule nt@(Symbol name) pri rhs = modifyState (\ste -> ste { pRules = updateRT (pRules ste) } )
   where
     updateRT oldRules = M.insert nt (RuleCache newDefs newParser) oldRules
@@ -29,9 +31,8 @@ addRule nt@(Symbol name) pri rhs = modifyState (\ste -> ste { pRules = updateRT 
 
 -- | Term evaluation
 instance Evaluable (Term Meta) where
-    -- disable typechecking for now due to performance issues
-    eval t@(TFunc _ _ f) = {- checkAppliable t >> -} eval f
-    eval t@(TComp _ f g) = {- checkAppliable t >> -} eval f >> eval g
+    eval (TFunc _ _ f) = checkAppliable f >> eval f
+    eval (TComp _ f g) = eval f >> eval g
     eval q = push q
 
 -- | Function definition evaluation

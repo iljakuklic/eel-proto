@@ -2,7 +2,7 @@
 module Sema.Term (
         Term(..), FunctionDef(..), BuiltIn(..),
         SymTable, Stack(..), Symbol(..),
-        getMeta, setMeta, modifyMeta, onStack
+        getMeta, setMeta, modifyMeta, mapMeta, onStack
     ) where
 
 import qualified Data.Map as M
@@ -34,6 +34,12 @@ data FunctionDef m
 type SymTable m = M.Map Symbol (FunctionDef m)
 -- | Compile-time stack
 newtype Stack m = Stack [Term m]
+
+-- | Check wether a term is a literal value
+isValue (TFunc _ _ _) = False
+isValue (TComp _ _ _) = False
+isValue (TQuot _ _  ) = False
+isValue _             = True
 
 -- | get term metadata
 getMeta (TFunc  m _ _) = m
@@ -81,20 +87,19 @@ instance Show (Term m) where
     show (TList  _ xs)  = "("  ++ show xs ++ ")"
     show (TUnit  _)     = "#"
 
-{-
-instance Functor Term where
-    fmap f (TFunc  m a)   = TFunc  (f m) a
-    fmap f (TComp  m a b) = TComp  (f m) (fmap f a) (fmap f b)
-    fmap f (TQuot  m a)   = TQuot  (f m) (fmap f a)
-    fmap f (TInt   m a)   = TInt   (f m) a
-    fmap f (TFloat m a)   = TFloat (f m) a
-    fmap f (TChar  m a)   = TChar  (f m) a
-    fmap f (TSumA  m a)   = TSumA  (f m) (fmap f a)
-    fmap f (TSumB  m a)   = TSumB  (f m) (fmap f a)
-    fmap f (TPair  m a b) = TPair  (f m) (fmap f a) (fmap f b)
-    fmap f (TList  m as)  = TList  (f m) (fmap (fmap f) as)
-    fmap f (TUnit  m)     = TUnit  (f m)
--}
+-- | Map over metadata
+mapMeta = mm where
+    mm f (TFunc  m a d) = TFunc  (f m) a d
+    mm f (TComp  m a b) = TComp  (f m) (mm f a) (mm f b)
+    mm f (TQuot  m a)   = TQuot  (f m) (mm f a)
+    mm f (TInt   m a)   = TInt   (f m) a
+    mm f (TFloat m a)   = TFloat (f m) a
+    mm f (TChar  m a)   = TChar  (f m) a
+    mm f (TSumA  m a)   = TSumA  (f m) (mm f a)
+    mm f (TSumB  m a)   = TSumB  (f m) (mm f a)
+    mm f (TPair  m a b) = TPair  (f m) (mm f a) (mm f b)
+    mm f (TList  m as)  = TList  (f m) (fmap (mm f) as)
+    mm f (TUnit  m)     = TUnit  (f m)
 
 instance Show (Stack m) where
     show (Stack s) = "$" ++ show (reverse s) ++ "$"
