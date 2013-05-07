@@ -1,5 +1,5 @@
 
-module Sema.Infer (infer, coerce, coerceToInput, inferCoerce, stackInfer, appliesTo, inferValueForce) where
+module Sema.Infer (infer, coerce, coerceToInput, inferCoerce, stackInfer, appliesTo, inferValueForce, stackify) where
 
 import Sema.Types
 import Sema.Error
@@ -205,8 +205,6 @@ inferValueForce env t = fst . inferVal  env . mapMeta (%% mEps) $ t
 -- | Get the type of a stack
 stackInfer env (Stack stk) = stkType' -- either err id stkType
   where
-    stkTerm = Data.List.foldr (flip $ TPair mEps) (TUnit mEps) stk
-    stkType = getType' . mType . getMeta . fst . inferVal env $ stkTerm
     stkTypes = mapM (getType' . mType . getMeta . fst . inferVal env) stk
     stkType' = Data.List.foldr (flip (unCollideT tProd)) tUnit (either err id stkTypes)
     err = error ("Incorrect stack type!!!\n" ++ show (Stack stk))
@@ -214,3 +212,17 @@ stackInfer env (Stack stk) = stkType' -- either err id stkType
 -- | Check if given function applies to the stack
 appliesTo (TyBin (TyFunc _) fargs _) ty1 = unCollideT unify ty1 fargs
 appliesTo t _ty1 = error ("Applying a non-function: " ++ show t)
+
+-- | Adjust the type from term to value on the stack
+stackify term = do
+    env <- pTypeTable
+    let term' = infer env term
+    case mType (getMeta term') of
+        NoType               -> error "Type not inferred... never happens"
+        HasType (Right  t) _ | isValue term' ->
+            case t of
+                TyBin (TyFunc _ph) _ (TyBin TyProd _ ty) ->
+                     return $ termModifyType (const $ HasType (Right ty) ty) term'
+                _ -> return term'
+        HasType (Left err) _ -> fail $ "Pushing an invalid term " ++ show term' ++ " / " ++ show err
+        _                    -> return term'

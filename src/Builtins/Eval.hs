@@ -6,7 +6,6 @@ import Sema.Infer
 import Parser.State
 import Parser.Eval
 import Parser.Rule
-import Builtins.Conversions
 import Control.Applicative
 
 import Data.Char
@@ -14,10 +13,13 @@ import qualified Data.Map as M
 import Text.Parsec(try, anyChar, modifyState, Stream, Parsec)
 import Data.Functor.Identity
 
+-- empty metadata helper
 e = mEps
 
+-- | Invoke a parser
 invoke nt = lookupParser nt >>= id
 
+-- | Add a parsing rule
 addRule :: (Stream s Identity Char) => Symbol -> Int -> Term Meta -> Parsec s (PState s c Meta) ()
 addRule nt@(Symbol name) pri rhs = modifyState (\ste -> ste { pRules = updateRT (pRules ste) } )
   where
@@ -28,12 +30,19 @@ addRule nt@(Symbol name) pri rhs = modifyState (\ste -> ste { pRules = updateRT 
         newDefs = M.insertWith (++) pri [rhs] oldDefs
         newParser = generateNamedParser name eval (map snd $ M.toDescList newDefs)
 
+-- | convert a term to the string
+termToString :: Monad m => Term me -> m String
+termToString (TList _ xs) = mapM termToChar xs
+  where
+    termToChar (TChar _ x) = return x
+    termToChar t           = fail ("Not a character: " ++ show t)
+termToString x = fail (show x ++ " is not a string")
 
 -- | Term evaluation
 instance Evaluable (Term Meta) where
-    eval (TFunc _ _ f) = checkAppliable f >> eval f
+    eval (TFunc _ _ f) = {- checkAppliable f >> -} eval f
     eval (TComp _ f g) = eval f >> eval g
-    eval q = push q
+    eval x = stackify x >>= push
 
 -- | Function definition evaluation
 instance Evaluable (FunctionDef Meta) where
@@ -65,14 +74,14 @@ instance Evaluable BuiltIn where
         case x of
             (TSumA _ a) -> do push a; eval fa
             (TSumB _ b) -> do push b; eval fb
-            _ -> error ("Sum type is not either Left or Right: " ++ show x)
+            _ -> fail ("Type error: sel applied to " ++ show x)
 
     -- let binding
     eval BIlet     = error "Let not implemented"
 
     -- function definition
     eval BIdef = do
-        name <- termToString <$> pop
+        name <- pop >>= termToString
         TQuot _ body' <- pop
         env <- pTypeTable
         let body = infer env body'
@@ -82,14 +91,14 @@ instance Evaluable BuiltIn where
 
     -- function lookup from a string
     eval BIpromote = do
-        name <- Symbol . termToString <$> pop
+        name <- Symbol <$> (pop >>= termToString)
         term <- lookupFunc name
         push (TQuot mEps $ TFunc mEps name term)
 
     -- define a grammar rule
     eval BIdefrule = do
         TInt _ prio <- pop
-        name <- termToString <$> pop
+        name <- pop >>= termToString
         TQuot _ body' <- pop
         env <- pTypeTable
         let body = infer env body'
@@ -98,7 +107,7 @@ instance Evaluable BuiltIn where
             Right _  -> addRule (Symbol name) prio body
 
     -- grammar nonterminal parsing invokation
-    eval BIinvoke  = pop >>= (invoke . Symbol . termToString)
+    eval BIinvoke  = pop >>= termToString >>= (invoke . Symbol)
 
     -- primitive parser for single character
     eval BIppchar = do
@@ -113,7 +122,7 @@ instance Evaluable BuiltIn where
                 _ -> fail ("Unexpected character " ++ show ch)
 
     -- failing primitive parser
-    eval BIppfail = pop >>= fail . ("User error: " ++) . termToString
+    eval BIppfail = pop >>= termToString >>= fail . ("User error: " ++)
 
     -- evaluate a function without side effects (parsing, function definitions etc.)
     eval bi = evalPure (evalP bi)
@@ -159,7 +168,7 @@ instance Evaluable BuiltIn where
         evalP BIord   (TChar  m' c : s) = let m = m' %% e in TInt   m (ord c)          : s
         evalP BIchar  (TInt   m' x : s) = let m = m' %% e in TChar  m (chr x)          : s
         -- error condition
-        evalP f s = error ("Could not evaluate " ++ show f ++ " on " ++ show s)
+        evalP f s = fail ("Could not evaluate " ++ show f ++ " on stack " ++ show s ++ ": type mismatch")
         -- helpers
         int2op op (TInt   m1 y : TInt   m2 x : s) = TInt   (m1 %% m2) (x `op` y) : s
         int2op _op _                              = error "Invalid integer binary operation"
