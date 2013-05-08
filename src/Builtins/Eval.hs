@@ -3,7 +3,6 @@ module Builtins.Eval (eval, invoke) where
 
 import Sema.Term
 import Sema.Infer
-import Builtins.Types
 import Parser.State
 import Parser.Eval
 import Parser.Rule
@@ -47,7 +46,7 @@ instance Evaluable (Term Meta) where
 
 -- | Function definition evaluation
 instance Evaluable (FunctionDef Meta) where
-    eval (FDBuiltIn bi) = stackApplyType (builtInType bi) >> eval bi
+    eval (FDBuiltIn bi) = eval bi
     eval (FDUser term)  = eval term
 
 -- | Builtin evaluation
