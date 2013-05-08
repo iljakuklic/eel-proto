@@ -33,7 +33,7 @@ data FunctionDef m
 -- | Symbol table
 type SymTable m = M.Map Symbol (FunctionDef m)
 -- | Compile-time stack
-data Stack t m = Stack t [Term m]
+data Stack    m = Stack [Term m]
 
 -- | Check wether a term is a literal value
 isValue (TFunc _ _ _) = False
@@ -71,7 +71,7 @@ setMeta (TUnit  _)     m = TUnit  m
 modifyMeta f t = setMeta t . f $ getMeta t
 
 -- | perform a function on stack
-onStack f (Stack t s) = Stack t (f s)
+onStack f (Stack s) = Stack (f s)
 
 instance Show (Term m) where
     --show (TFunc  _ (Symbol "id"))   = ""
@@ -101,5 +101,5 @@ mapMeta = mm where
     mm f (TList  m as)  = TList  (f m) (fmap (mm f) as)
     mm f (TUnit  m)     = TUnit  (f m)
 
-instance Show (Stack t m) where
-    show (Stack _ s) = "$" ++ show (reverse s) ++ "$"
+instance Show (Stack m) where
+    show (Stack s) = "$" ++ show (reverse s) ++ "$"

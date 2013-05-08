@@ -27,7 +27,7 @@ evalPure f = modifyState (\ste -> ste { pStack = onStack f (pStack ste) } )
 push x = evalPure (\stk -> x : stk)
 -- | Pop value from the stack
 pop    = do
-    Stack _t (top:rest) <- pStack <$> getState
+    Stack (top:rest) <- pStack <$> getState
     evalPure (const rest)
     return top
 

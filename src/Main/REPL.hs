@@ -65,7 +65,7 @@ repl' n ste = do
                     Right ste' -> (putStrLn $ show $ pStack ste') >> return ste'
                 continue ste''
 
-stackDump ste = let stk@(Stack ty _) = pStack ste in putStrLn (show stk) >> putStrLn ("Type: " ++ show ty)
+stackDump ste = let stk = pStack ste in putStrLn (show stk) >> putStrLn ("Type: " ++ show (stackInfer stk))
 
 prompt n = putStr (zeroPad 3 (show (n :: Int)) ++ "> ")
 zeroPad n = reverse . take n . (++ repeat '0') . reverse

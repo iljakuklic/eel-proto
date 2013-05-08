@@ -140,7 +140,7 @@ inferVal (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
     where (b', bt) = inferVal b
 
 -- | Get the type of a stack
-stackInfer ss@(Stack _t stk) = stkType' -- either err id stkType
+stackInfer ss@(Stack stk) = stkType'
   where
     stkTypes = mapM (getType' . mType . getMeta . fst . inferVal) stk
     stkType' = Data.List.foldr (flip (unCollideT tProd)) tUnit (either err id stkTypes)
