@@ -31,7 +31,7 @@ repl' n ste = do
     if end then quit else do
         lineIn <- getLine
         case reverse . dropWhile isSpace . reverse $ lineIn of
-            ""        -> continue ste
+            ""        -> continue'
             ":q"      -> quit
             ":quit"   -> quit
             ":exit"   -> quit
@@ -54,7 +54,7 @@ repl' n ste = do
                         FDUser term -> putStrLn (dumpTerm term)
                         FDBuiltIn _ -> putStrLn "<builtin>"
                 continue'
-            ":x"      -> continue (ste { pStack = Stack []})
+            ":x"      -> continue (ste { pStack = initStack})
             ":ls"     -> printFuncs ste >> continue'
             ":l"      -> printFuncs ste >> continue'
             ":s"      -> stackDump  ste >> continue'
@@ -65,10 +65,7 @@ repl' n ste = do
                     Right ste' -> (putStrLn $ show $ pStack ste') >> return ste'
                 continue ste''
 
-stackDump ste = putStrLn (show stk) >> putStrLn ("Type: " ++ show ty)
-    where
-        stk = pStack ste
-        ty  = stackInfer (pTypeTablePure ste) stk
+stackDump ste = let stk@(Stack ty _) = pStack ste in putStrLn (show stk) >> putStrLn ("Type: " ++ show ty)
 
 prompt n = putStr (zeroPad 3 (show (n :: Int)) ++ "> ")
 zeroPad n = reverse . take n . (++ repeat '0') . reverse

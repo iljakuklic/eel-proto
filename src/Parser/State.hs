@@ -22,7 +22,7 @@ import qualified Data.Map as M
 data PState s c m = PState {
         pSymTable :: SymTable m,    -- ^ symbol table
         pRules    :: RuleTable m (Parsec s (PState s c m) ()), -- ^ rule table
-        pStack    :: Stack m        -- ^ evaluation stack contents
+        pStack    :: Stack MType m        -- ^ evaluation stack contents
     }
 
 -- | Type structure specialisation used in metadata

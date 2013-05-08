@@ -3,6 +3,7 @@ module Parser.Pokus where
 
 import Builtins.Eval
 import Sema.Term
+import Sema.Types
 import Parser.State
 import Builtins.Builtins()
 import Builtins.Types
@@ -17,7 +18,8 @@ import qualified Data.Map as M
 initSymTab :: SymTable m
 initSymTab = builtInsTable
 
-initState = PState { pSymTable = initSymTab, pRules = M.empty, pStack = Stack [] }
+initStack = Stack tUnit []
+initState = PState { pSymTable = initSymTab, pRules = M.empty, pStack = initStack }
 
 e = mEps
 
@@ -58,4 +60,4 @@ printFuncs (PState st _ _) = sequence_ [ printFunc n f | (n, f) <- M.toList st]
 printFunc  n (FDUser    d) = printFunc' n (either show show $ termType d) (show d)
 printFunc  n (FDBuiltIn b) = printFunc' n (show $ builtInType b) "<<built-in>>"
 printFunc' n t d = printf "%-10s : %-50s = %s\n" (show n) t d
-printStack (PState _ _ (Stack stk)) = mapM_ (putStrLn . show) stk
+printStack (PState _ _ (Stack _t stk)) = mapM_ (putStrLn . show) stk

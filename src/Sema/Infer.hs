@@ -1,5 +1,5 @@
 
-module Sema.Infer (infer, coerce, coerceToInput, inferCoerce, stackInfer, appliesTo, inferValueForce, stackify) where
+module Sema.Infer (infer, coerce, coerceToInput, inferCoerce, stackInfer, appliesTo, inferValueForce, stackify, inferResultType) where
 
 import Sema.Types
 import Sema.Error
@@ -203,11 +203,11 @@ inferVal env (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
 inferValueForce env t = fst . inferVal  env . mapMeta (%% mEps) $ t
 
 -- | Get the type of a stack
-stackInfer env (Stack stk) = stkType' -- either err id stkType
+stackInfer env ss@(Stack _t stk) = stkType' -- either err id stkType
   where
     stkTypes = mapM (getType' . mType . getMeta . fst . inferVal env) stk
     stkType' = Data.List.foldr (flip (unCollideT tProd)) tUnit (either err id stkTypes)
-    err = error ("Incorrect stack type!!!\n" ++ show (Stack stk))
+    err = error ("Incorrect stack type!!!\n" ++ show ss)
 
 -- | Check if given function applies to the stack
 appliesTo (TyBin (TyFunc _) fargs _) ty1 = unCollideT unify ty1 fargs
@@ -226,3 +226,11 @@ stackify term = do
                 _ -> return term'
         HasType (Left err) _ -> fail $ "Pushing an invalid term " ++ show term' ++ " / " ++ show err
         _                    -> return term'
+
+-- | Get the type of the result stack after applying a function
+inferResultType phase stkType funType = do
+    let rVar = genTyVar stkType
+    let rfType = tFunc phase stkType (TyVar rVar)
+    let err = error "rVar not found, this shall never happen"
+    sm <- unCollideT unify rfType funType
+    return . maybe err id $ M.lookup rVar sm
