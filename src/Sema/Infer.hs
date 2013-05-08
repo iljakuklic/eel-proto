@@ -230,7 +230,7 @@ stackify term = do
 -- | Get the type of the result stack after applying a function
 inferResultType phase stkType funType = do
     let rVar = genTyVar stkType
-    let rfType = tFunc phase stkType (TyVar rVar)
+    let rfType = tFunc (TyPhase phase) stkType (TyVar rVar)
     let err = error "rVar not found, this shall never happen"
     sm <- unCollideT unify rfType funType
     return . maybe err id $ M.lookup rVar sm

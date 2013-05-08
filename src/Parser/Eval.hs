@@ -3,10 +3,11 @@ module Parser.Eval (
         -- * Term evaluation
         Evaluable, eval, evalPure, push, pop, addFunc,
         -- * Type manipulation
-        stackType, checkAppliable
+        stackType, stackApplyType, checkAppliable
     ) where
 
 import Sema.Term
+import Sema.Types
 import Sema.Infer
 import Parser.State
 
@@ -36,6 +37,14 @@ stackType = do
     stk <- pStack <$> getState
     env <- pTypeTable
     return $ stackInfer env stk
+
+-- | Compute the new type of the stack
+stackApplyType fty = do
+    ste <- getState
+    let Stack sty stk = pStack ste
+    case inferResultType TyParse sty fty of
+        Right rty' -> setState (ste { pStack = Stack rty' stk })
+        Left err -> fail ("Stack type mismatch: " ++ show sty ++ " vs. " ++ show fty ++ ": " ++ show err)
 
 -- | Check if a function is appliabe to the current stack
 checkAppliable def = do

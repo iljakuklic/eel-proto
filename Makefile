@@ -22,7 +22,7 @@ eel: dist/build/eel/eel
 	cp $< $@
 
 repl: eel
-	@rlwrap -O'^[0-9]+>' -w5 -pgreen ./eel -i samples/brainfuck.eel
+	rlwrap -O'^[0-9]+>' -w5 -pgreen ./eel -i samples/brainfuck.eel
 
 clean:
 	rm -f eel

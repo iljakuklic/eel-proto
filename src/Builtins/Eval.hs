@@ -3,6 +3,7 @@ module Builtins.Eval (eval, invoke) where
 
 import Sema.Term
 import Sema.Infer
+import Builtins.Types
 import Parser.State
 import Parser.Eval
 import Parser.Rule
@@ -40,13 +41,17 @@ termToString x = fail (show x ++ " is not a string")
 
 -- | Term evaluation
 instance Evaluable (Term Meta) where
-    eval (TFunc _ _ f) = {- checkAppliable f >> -} eval f
+    eval (TFunc _ _ f) = eval f
     eval (TComp _ f g) = eval f >> eval g
-    eval x = push x
+    eval x = do
+        x' <- flip infer x <$> pTypeTable
+        case termType x' of
+            Left err -> fail ("Cannot apply bogus term to the stack: " ++ show x' ++ ": " ++ show err)
+            Right ty -> stackApplyType ty >> push x'
 
 -- | Function definition evaluation
 instance Evaluable (FunctionDef Meta) where
-    eval (FDBuiltIn bi) = eval bi
+    eval (FDBuiltIn bi) = stackApplyType (builtInType bi) >> eval bi
     eval (FDUser term)  = eval term
 
 -- | Builtin evaluation
