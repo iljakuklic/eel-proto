@@ -91,7 +91,7 @@ inferComposition f@(TyBin (TyFunc ph1) a b) g@(TyBin (TyFunc _) _ _) = do
 inferComposition _ _ = error "Invalid composition inference"
 
 -- | Main type inference engine
-infer env = fst . inferTerm env
+infer = fst . inferTerm
 
 -- | set type or corresponding error in the term metadata
 setType' dflt term err@(Left _) = (termModifyType (const $ HasType err dflt) term, Left SEInherited)
@@ -107,41 +107,41 @@ getType' (HasType t _) = t
 getType' NoType        = error "getType' NoType never happens"
 
 -- | infer term type only if not done so already
-inferTerm _env t | hasType' tyMeta = (t, getType' tyMeta)
+inferTerm t | hasType' tyMeta = (t, getType' tyMeta)
     where tyMeta = mType . getMeta $ t
-inferTerm env (TComp m f g) = setType' anyFunc (TComp m f' g') (join (inferComposition <$> ft <*> gt))
-    where (f', ft) = inferTerm env f; (g', gt) = inferTerm env g
-inferTerm env (TQuot m f) = setType' (inferLiteral anyFunc) (TQuot m f') (inferLiteral <$> ft)
-    where (f', ft) = inferTerm env f
-inferTerm _env fun@(TFunc _ _ funDef) = setType' anyFunc fun (functionDefType funDef)
-inferTerm env term = setType' anyFunc term' (inferLiteral <$> ty)
-    where (term', ty) = inferVal env term
+inferTerm (TComp m f g) = setType' anyFunc (TComp m f' g') (join (inferComposition <$> ft <*> gt))
+    where (f', ft) = inferTerm f; (g', gt) = inferTerm g
+inferTerm (TQuot m f) = setType' (inferLiteral anyFunc) (TQuot m f') (inferLiteral <$> ft)
+    where (f', ft) = inferTerm f
+inferTerm fun@(TFunc _ _ funDef) = setType' anyFunc fun (functionDefType funDef)
+inferTerm term = setType' anyFunc term' (inferLiteral <$> ty)
+    where (term', ty) = inferVal term
 
 -- | infer value term type only if not done so already
-inferVal _env t | hasType' tyMeta = (t, getType' tyMeta)
+inferVal t | hasType' tyMeta = (t, getType' tyMeta)
     where tyMeta = mType . getMeta $ t
-inferVal env   (TQuot _ t)    = inferTerm env t
-inferVal env t@(TFunc _ _ _)  = inferTerm env t
-inferVal env t@(TComp _ _ _)  = inferTerm env t
-inferVal _   t@(TUnit _)      = setType'' t tUnit
-inferVal _   t@(TInt  _ _)    = setType'' t tInt
-inferVal _   t@(TChar _ _)    = setType'' t tChar
-inferVal _   t@(TFloat _ _)   = setType'' t tFloat
-inferVal env (TList m xs)     = setType' (tList ta) (TList m xs') ty
-    where (xs', ts') = unzip $ fmap (inferVal env) xs
+inferVal   (TQuot _ t)    = inferTerm t
+inferVal t@(TFunc _ _ _)  = inferTerm t
+inferVal t@(TComp _ _ _)  = inferTerm t
+inferVal t@(TUnit _)      = setType'' t tUnit
+inferVal t@(TInt  _ _)    = setType'' t tInt
+inferVal t@(TChar _ _)    = setType'' t tChar
+inferVal t@(TFloat _ _)   = setType'' t tFloat
+inferVal (TList m xs)     = setType' (tList ta) (TList m xs') ty
+    where (xs', ts') = unzip $ fmap (inferVal) xs
           ty = tList <$> (foldM ff ta ts')
           ff a b = join (typeUnify a <$> b)
-inferVal env (TPair m a b) = setType' ta (TPair m a' b') (unCollideT tProd <$> at <*> bt)
-    where (a', at) = inferVal env a
-          (b', bt) = inferVal env b
-inferVal env (TSumA m a) = setType' ta (TSumA m a') (unCollideT tSum <$> at <*> pure tb)
-    where (a', at) = inferVal env a
-inferVal env (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
-    where (b', bt) = inferVal env b
+inferVal (TPair m a b) = setType' ta (TPair m a' b') (unCollideT tProd <$> at <*> bt)
+    where (a', at) = inferVal a
+          (b', bt) = inferVal b
+inferVal (TSumA m a) = setType' ta (TSumA m a') (unCollideT tSum <$> at <*> pure tb)
+    where (a', at) = inferVal a
+inferVal (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
+    where (b', bt) = inferVal b
 
 -- | Get the type of a stack
-stackInfer env ss@(Stack _t stk) = stkType' -- either err id stkType
+stackInfer ss@(Stack _t stk) = stkType' -- either err id stkType
   where
-    stkTypes = mapM (getType' . mType . getMeta . fst . inferVal env) stk
+    stkTypes = mapM (getType' . mType . getMeta . fst . inferVal) stk
     stkType' = Data.List.foldr (flip (unCollideT tProd)) tUnit (either err id stkTypes)
     err = error ("Incorrect stack type!!!\n" ++ show ss)

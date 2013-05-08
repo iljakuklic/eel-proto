@@ -70,7 +70,7 @@ stackDump ste = let stk@(Stack ty _) = pStack ste in putStrLn (show stk) >> putS
 prompt n = putStr (zeroPad 3 (show (n :: Int)) ++ "> ")
 zeroPad n = reverse . take n . (++ repeat '0') . reverse
 
-pinfer = infer <$> pTypeTable <*> pterm
+pinfer = infer <$> pterm
 
 printErr s    = printErrStr (show s)
 printErrStr s = hPutStrLn stderr ("ERROR: " ++ s)

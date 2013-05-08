@@ -83,8 +83,7 @@ instance Evaluable BuiltIn where
     eval BIdef = do
         name <- pop >>= termToString
         TQuot _ body' <- pop
-        env <- pTypeTable
-        let body = infer env body'
+        let body = infer body'
         case termType body of
             Left err -> fail ("ERROR while inferring type for function '" ++ name ++ "': " ++ show err)
             Right _  -> addFunc (Symbol name) (FDUser body)
@@ -100,8 +99,7 @@ instance Evaluable BuiltIn where
         TInt _ prio <- pop
         name <- pop >>= termToString
         TQuot _ body' <- pop
-        env <- pTypeTable
-        let body = infer env body'
+        let body = infer body'
         case termType body of
             Left err -> fail ("ERROR while inferring type for nonterminal '" ++ name ++ "': " ++ show err)
             Right _  -> addRule (Symbol name) prio body

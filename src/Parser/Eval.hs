@@ -32,10 +32,7 @@ pop    = do
     return top
 
 -- | Get the type of current stack
-stackType = do
-    stk <- pStack <$> getState
-    env <- pTypeTable
-    return $ stackInfer env stk
+stackType = stackInfer . pStack <$> getState
 
 -- | Add a function to the symbol table
 addFunc name term = do
