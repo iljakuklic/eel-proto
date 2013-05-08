@@ -43,11 +43,7 @@ termToString x = fail (show x ++ " is not a string")
 instance Evaluable (Term Meta) where
     eval (TFunc _ _ f) = eval f
     eval (TComp _ f g) = eval f >> eval g
-    eval x = do
-        x' <- flip infer x <$> pTypeTable
-        case termType x' of
-            Left err -> fail ("Cannot apply bogus term to the stack: " ++ show x' ++ ": " ++ show err)
-            Right ty -> stackApplyType ty >> push x'
+    eval x = push x
 
 -- | Function definition evaluation
 instance Evaluable (FunctionDef Meta) where
