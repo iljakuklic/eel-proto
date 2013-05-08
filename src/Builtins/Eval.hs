@@ -42,7 +42,7 @@ termToString x = fail (show x ++ " is not a string")
 instance Evaluable (Term Meta) where
     eval (TFunc _ _ f) = {- checkAppliable f >> -} eval f
     eval (TComp _ f g) = eval f >> eval g
-    eval x = stackify x >>= push
+    eval x = push x
 
 -- | Function definition evaluation
 instance Evaluable (FunctionDef Meta) where
