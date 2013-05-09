@@ -17,16 +17,13 @@ entry hd cnt = P.text hd <> P.text ": " $$ P.nest 20 cnt
 meta2doc (Meta ty pos) = info
   where
     info = entry "Source location" (loc pos)  $+$
-           entry "General type"    (genTy ty) $+$
-           entry "Inferred type"   (infTy ty)
+           entry "Type"            (genTy ty)
     unk = P.text "unknown"
     loc NoPos = unk
     loc (HasPos path b e) = P.text (show path) <+> lineCol b <+> P.text "--" <+> lineCol e
     lineCol (l, c) = P.parens (P.int l <> P.text ":" <> P.int c)
     genTy NoType = unk
-    genTy (HasType t _) = P.text (either show show t)
-    infTy NoType = unk
-    infTy (HasType _ t) = P.text (show t)
+    genTy (HasType t) = P.text (either show show t)
 
 -- | render metadata to a formatted string
 dumpMeta = show . meta2doc

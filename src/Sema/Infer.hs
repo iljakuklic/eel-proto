@@ -18,8 +18,6 @@ type Substitution v = M.Map v (Type v)
 
 ta = TyVar (genTyVar tUnit)
 tb = TyVar (genTyVar ta)
-tc = TyVar (genTyVar tb)
-anyFunc = tFunc tc ta tb
 
 -- | Type variable substitution
 subst :: (Ord v) => Substitution v -> Type v -> Type v
@@ -94,27 +92,27 @@ inferComposition _ _ = error "Invalid composition inference"
 infer = fst . inferTerm
 
 -- | set type or corresponding error in the term metadata
-setType' dflt term err@(Left _) = (termModifyType (const $ HasType err dflt) term, Left SEInherited)
-setType' _dfl term (Right ty)   = setType'' term ty
+setType' term err@(Left _) = (termModifyType (const $ HasType err) term, Left SEInherited)
+setType' term (Right ty)   = setType'' term ty
 -- | set type in the term metadata
-setType'' term ty' = let ty = niceTyVars ty' in (termModifyType (const $ HasType (Right ty) ty) term, Right ty)
+setType'' term ty' = let ty = niceTyVars ty' in (termModifyType (const $ HasType (Right ty)) term, Right ty)
 
 -- | Check if a type has been inferred already
-hasType' (HasType _ _) = True
-hasType' _             = False
+hasType' (HasType _) = True
+hasType' _           = False
 -- | unsafe type getter
-getType' (HasType t _) = t
-getType' NoType        = error "getType' NoType never happens"
+getType' (HasType t) = t
+getType' NoType      = error "getType' NoType never happens"
 
 -- | infer term type only if not done so already
 inferTerm t | hasType' tyMeta = (t, getType' tyMeta)
     where tyMeta = mType . getMeta $ t
-inferTerm (TComp m f g) = setType' anyFunc (TComp m f' g') (join (inferComposition <$> ft <*> gt))
+inferTerm (TComp m f g) = setType'  (TComp m f' g') (join (inferComposition <$> ft <*> gt))
     where (f', ft) = inferTerm f; (g', gt) = inferTerm g
-inferTerm (TQuot m f) = setType' (inferLiteral anyFunc) (TQuot m f') (inferLiteral <$> ft)
+inferTerm (TQuot m f) = setType'  (TQuot m f') (inferLiteral <$> ft)
     where (f', ft) = inferTerm f
-inferTerm fun@(TFunc _ _ funDef) = setType' anyFunc fun (functionDefType funDef)
-inferTerm term = setType' anyFunc term' (inferLiteral <$> ty)
+inferTerm fun@(TFunc _ _ funDef) = setType'  fun (functionDefType funDef)
+inferTerm term = setType'  term' (inferLiteral <$> ty)
     where (term', ty) = inferVal term
 
 -- | infer value term type only if not done so already
@@ -127,16 +125,16 @@ inferVal t@(TUnit _)      = setType'' t tUnit
 inferVal t@(TInt  _ _)    = setType'' t tInt
 inferVal t@(TChar _ _)    = setType'' t tChar
 inferVal t@(TFloat _ _)   = setType'' t tFloat
-inferVal (TList m xs)     = setType' (tList ta) (TList m xs') ty
+inferVal (TList m xs)     = setType'  (TList m xs') ty
     where (xs', ts') = unzip $ fmap (inferVal) xs
           ty = tList <$> (foldM ff ta ts')
           ff a b = join (typeUnify a <$> b)
-inferVal (TPair m a b) = setType' ta (TPair m a' b') (unCollideT tProd <$> at <*> bt)
+inferVal (TPair m a b) = setType'  (TPair m a' b') (unCollideT tProd <$> at <*> bt)
     where (a', at) = inferVal a
           (b', bt) = inferVal b
-inferVal (TSumA m a) = setType' ta (TSumA m a') (unCollideT tSum <$> at <*> pure tb)
+inferVal (TSumA m a) = setType'  (TSumA m a') (unCollideT tSum <$> at <*> pure tb)
     where (a', at) = inferVal a
-inferVal (TSumB m b) = setType' tb (TSumB m b') (unCollideT tSum ta <$> bt)
+inferVal (TSumB m b) = setType'  (TSumB m b') (unCollideT tSum ta <$> bt)
     where (b', bt) = inferVal b
 
 -- | Get the type of a stack

@@ -31,8 +31,8 @@ type MType = Type Symbol
 type MError = SemaError Symbol
 
 -- | AST node type annotations
-data TypeInfo = NoType                               -- ^ type has not been assigned yet
-              | HasType (Either MError MType) MType  -- ^ inferred type
+data TypeInfo = NoType                         -- ^ type has not been assigned yet
+              | HasType (Either MError MType)  -- ^ inferred type or type error
 
 -- | Source file position info
 data PosInfo = NoPos  -- ^ position is not known or has none
@@ -66,11 +66,10 @@ termSetPos term pos = modifyMeta (flip metaSetPos pos) term
 termModifyType f = modifyMeta (\m -> m { mType = f (mType m) } )
 -- | get term type if it has one correctly inferred
 termType term = case mType (getMeta term) of
-    HasType (Right _) t -> Right t
-    HasType err _ -> err
+    HasType t -> t
     _ -> error "Type not inferred"
 -- | get inferred type (one the term should have provided it typechecked)
-termInferredType term = case mType (getMeta term) of HasType _ t -> Just t; _ -> Nothing
+termInferredType term = case mType (getMeta term) of HasType (Right t) -> Just t; _ -> Nothing
 
 -- | Function definition type
 functionDefType (FDUser t)     = termType t
