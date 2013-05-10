@@ -9,8 +9,8 @@
 [ nil [ swap cons ] nil nil 0 ] 'bftape' def
 [ dup [ bury [ swap keep ] dip2 ] dip ] 'bfwr' def
 
-//[ 'bfprog' invoke [ i zap2 zap2 reverse [ char ] lmap ] i ] 'ext' 0 defrule
-[ 'bfprog' invoke ] '.bf' 0 defrule
+[ bftape 'bfprog' invoke [ i zap2 zap2 reverse [ char ] lmap ] i ] '.bf' 0 defrule
+//[ 'bfprog' invoke ] '.bf' 0 defrule
 
 //[ bftape 'bf' invoke ] 'bfprog' 0 defrule
 [ 'bf' invoke ] 'bfprog' 0 defrule
