@@ -1,11 +1,14 @@
 
-module Parser.Dump(dumpTerm, dumpMeta) where
+module Parser.Dump(dumpTerm, dumpMeta, printStack, printFuncs) where
 
 import Parser.State
 import Sema.Term
+import Builtins.Types
 
 import qualified Text.PrettyPrint.HughesPJ as P
 import Text.PrettyPrint.HughesPJ((<>), (<+>), ($+$), ($$))
+import qualified Data.Map as M
+import Text.Printf
 
 -- | create a block from curly braces
 block hd doc = hd <+> P.lbrace $+$ P.nest 4 doc $+$ P.rbrace
@@ -41,3 +44,13 @@ term2doc term = block (P.text hd) (termexpr $$ metadoc $$ cnt)
 
 -- | render term dump to a string
 dumpTerm = show . term2doc
+
+-- | Print function definitions
+printFuncs :: PState s c Meta -> IO ()
+printFuncs (PState st _ _ _) = sequence_ [ printFunc n f | (n, f) <- M.toList st]
+printFunc  n (FDUser    d) = printFunc' n (either show show $ termType d) (show d)
+printFunc  n (FDBuiltIn b) = printFunc' n (show $ builtInType b) "<<built-in>>"
+printFunc' n t d = printf "%-10s : %-50s = %s\n" (show n) t d
+
+-- | Print stack contents, one item per line
+printStack (PState _ _ (Stack stk) _) = mapM_ (putStrLn . show) stk

@@ -1,12 +1,11 @@
 
 module Main.Compiler(Settings(..), InputSpec(..), runCompiler) where
 
-import Parser.Pokus
 import Main.REPL
+import Parser.Parser
 
 import Prelude hiding (catch)
 import Control.Monad
-import Text.Parsec
 import System.FilePath
 import Control.Exception
 
@@ -30,11 +29,11 @@ data Settings = Settings {
 lookupDirs = [".", "lib/", "test/"]
 
 -- | prelude file name
-preludeName = "prelude.eel"
+preludeSpec = [ InputFile "prelude.eel" ]
 
 -- | Parse the list of strings with identifiers (filenames) in sequence
 parseStrs initSte strs = foldM parseStr initSte strs
-  where parseStr ste (name, str) = runParser ptop ste name str
+  where parseStr ste (name, str) = runEelExt name ste str
 
 -- | Lookup file contents in a list of directories
 lookupFile :: [FilePath] -> FilePath -> IO (Maybe String)
@@ -62,9 +61,9 @@ runCompiler settings = do
   where
     infiles    = map InputFile $ inputFilePaths settings
     input      = mapM readIn inputSpec
-    prelude'   = onFlag (not . noPreludeFlag) (InputFile preludeName)
+    prelude'   = onFlag (not . noPreludeFlag) preludeSpec
     cmdeval'   = [InputLit (evalString settings)]
     inputSpec  = prelude' ++ infiles ++ cmdeval'
-    onFlag f x = if f settings then [x] else []
+    onFlag f x = if f settings then x else []
 
 

@@ -4,7 +4,7 @@ module Main(main) where
 
 import Main.Compiler
 import Main.CommandLine
-import Parser.Pokus
+import Parser.Dump
 
 import System.Environment
 import System.IO

@@ -2,9 +2,10 @@
 
 module Main.REPL(repl) where
 
-import Parser.Pokus
+import Parser.Parser
 import Parser.State
 import Parser.Dump
+import Parser.Core
 import Sema.Term
 import Sema.Infer
 
@@ -60,23 +61,24 @@ repl' n ste = do
             ":s"      -> stackDump  ste >> continue'
             ':':str   -> printErrStr ("Unknown command: " ++ show str) >> continue'
             line      -> do
-                ste'' <- case runParser (onLine n >> ptop) ste "<interactive>" line of
+                ste'' <- case runParser (onLine n >> coreTopParser) ste "<interactive>" line of
                     Left err   -> printErr err >> return ste
                     Right ste' -> (putStrLn $ show $ pStack ste') >> return ste'
                 continue ste''
 
+-- print stack contents
 stackDump ste = let stk = pStack ste in putStrLn (show stk) >> putStrLn ("Type: " ++ show (stackInfer stk))
 
 prompt n = putStr (zeroPad 3 (show (n :: Int)) ++ "> ")
 zeroPad n = reverse . take n . (++ repeat '0') . reverse
 
-pinfer = infer <$> pterm
+pinfer = infer <$> coreTermParser
 
 printErr s    = printErrStr (show s)
 printErrStr s = hPutStrLn stderr ("ERROR: " ++ s)
 
 withParse n ste parser str action =
-    case runParser (onLine n >> skip >> parser) ste "<interactive>" str of
+    case runParser (onLine n >> coreSkipParser >> parser) ste "<interactive>" str of
         Left err -> printErr err
         Right term -> action term
 

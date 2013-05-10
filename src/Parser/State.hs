@@ -18,11 +18,14 @@ import Text.Parsec
 import Control.Applicative
 import qualified Data.Map as M
 
+type EelParsec s c m = Parsec s (PState s c m) ()
+
 -- | Parser state
 data PState s c m = PState {
-        pSymTable :: SymTable m,    -- ^ symbol table
-        pRules    :: RuleTable m (Parsec s (PState s c m) ()), -- ^ rule table
-        pStack    :: Stack m        -- ^ evaluation stack contents
+        pSymTable  :: SymTable m,                         -- ^ symbol table
+        pRules     :: RuleTable m (EelParsec s c m),      -- ^ rule table
+        pStack     :: Stack m,                            -- ^ evaluation stack contents
+        pPrimRules :: (EelParsec s c m, EelParsec s c m)  -- ^ core parsers: (skip parser, term eval parser)
     }
 
 -- | Type structure specialisation used in metadata

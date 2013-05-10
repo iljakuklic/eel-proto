@@ -1,5 +1,5 @@
 
-module Builtins.Eval (eval, invoke) where
+module Builtins.Eval (eval, invoke, addRule, builtInsTable) where
 
 import Sema.Term
 import Sema.Infer
@@ -7,6 +7,7 @@ import Parser.State
 import Parser.Eval
 import Parser.Rule
 import Control.Applicative
+import Builtins.Table
 
 import Data.Char
 import qualified Data.Map as M
@@ -121,6 +122,11 @@ instance Evaluable BuiltIn where
 
     -- failing primitive parser
     eval BIppfail = pop >>= termToString >>= fail . ("User error: " ++)
+
+    -- whitespace skipper from the core
+    eval BIppcoreskip = (fst . pPrimRules <$> getState) >>= id
+    -- term parser from the core
+    eval BIppcoreterm = (snd . pPrimRules <$> getState) >>= id
 
     -- evaluate a function without side effects (parsing, function definitions etc.)
     eval bi = evalPure (evalP bi)
