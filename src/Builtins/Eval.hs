@@ -78,7 +78,7 @@ instance Evaluable BuiltIn where
             _ -> fail ("Type error: sel applied to " ++ show x)
 
     -- let binding
-    eval BIlet     = error "Let not implemented"
+    eval BIlet     = fail "Let not implemented"
 
     -- function definition
     eval BIdef = do
@@ -175,11 +175,11 @@ instance Evaluable BuiltIn where
         evalP f s = fail ("Could not evaluate " ++ show f ++ " on stack " ++ show s ++ ": type mismatch")
         -- helpers
         int2op op (TInt   m1 y : TInt   m2 x : s) = TInt   (m1 %% m2) (x `op` y) : s
-        int2op _op _                              = error "Invalid integer binary operation"
+        int2op _op _                              = fail "Invalid integer binary operation"
         flt2op op (TFloat m1 y : TFloat m2 x : s) = TFloat (m1 %% m2) (x `op` y) : s
-        flt2op _op _                              = error "Invalid floating-point binary operation"
+        flt2op _op _                              = fail "Invalid floating-point binary operation"
         flt1op op (TFloat m1 x : s)               = TFloat (m1 %% m1) (op x)     : s
-        flt1op _op _                              = error "Invalid floating-point unary operation"
+        flt1op _op _                              = fail "Invalid floating-point unary operation"
         cmpop x y s = res : s
             where res = case compare x y of
                     EQ -> TSumB e (TUnit e)
