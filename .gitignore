@@ -3,6 +3,10 @@
 *.o
 *.bc
 *.hi
+*.hp
+*.ps
+*.aux
+*.prof
 dist/
 cabal-dev/
 eel
