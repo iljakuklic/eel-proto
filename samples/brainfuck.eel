@@ -1,36 +1,35 @@
 
+// brainfuck codes
+// $[([({'+',43}),({'-',45}),({'[',91}),({']',93}),({'<',60}),({'>',62}),({'.',46})])]$
 
-[ inc ] 'bfi' def
-[ dec ] 'bfd' def
+// brainfuck defs
 [ swap [ swap ] [ nil 0 ] unlist [ swap cons ] dip2 ] 'bfl' def
 [ [ swap ] dip bfl [ swap ] dip ] 'bfr' def
 [ [ eqzero not ] while ] 'bfloop' def
 [ nil [ swap cons ] nil nil 0 ] 'bftape' def
 [ dup [ bury [ swap keep ] dip2 ] dip ] 'bfwr' def
 
-[ [ bfi ] '+' def  [ bfd ] '-' def  [ bfr ] '>' def  [ bfl ] '<' def  [ bfloop ] 'o' def  [ bfwr ] '.' def ] 'bfdefs' def
+//[ 'bfprog' invoke [ i zap2 zap2 reverse [ char ] lmap ] i ] 'ext' 0 defrule
+[ 'bfprog' invoke ] '.bf' 0 defrule
 
-//[
-//        + + + + +   + + + + +
-//        [
-//            >   + + + + +   + +
-//            >   + + + + +   + + + + +
-//            >   + + +
-//            >   +
-//            < < < <   -
-//        ] o
-//        >   + +   .
-//        >   +   .
-//        + + + + +   + +   .
-//        .
-//        + + +   .
-//        >   + +   .
-//        < <   + + + + +   + + + + +   + + + + +   .
-//        >   .
-//        + + +   .
-//        - - - - -   -   .
-//        - - - - -   - - -   .
-//        >   +   .
-//        >   .
-//] 'bfhello' def
+//[ bftape 'bf' invoke ] 'bfprog' 0 defrule
+[ 'bf' invoke ] 'bfprog' 0 defrule
+
+[ [ ord cmp eq ] ppchar ] 'ascii' def
+
+[ [] ] 'bf' 1 defrule
+//[ 'bfi' invoke 'bf' invoke cat ] 'bf' 1 defrule
+[ 'bfi' invoke 'bf' invoke cat ] 'bf' 1 defrule
+
+[ [ ord 43 cmp ne ] ppchar [] ] 'bfii' 1 defrule
+[ 43 ascii [ inc ] ] 'bfii' 1 defrule
+
+[ [ ord 93 cmp ne ] ppchar [] ] 'bfi' 1 defrule
+[ 43 ascii [ inc ] ] 'bfi' 1 defrule
+[ 45 ascii [ dec ] ] 'bfi' 1 defrule
+[ 60 ascii [ bfl ] ] 'bfi' 1 defrule
+[ 62 ascii [ bfr ] ] 'bfi' 1 defrule
+[ 46 ascii [ bfwr ] ] 'bfi' 1 defrule
+[ 91 ascii 'bf' invoke qot [ bfloop ] cat 93 ascii ] 'bfi' 1 defrule
+
 
