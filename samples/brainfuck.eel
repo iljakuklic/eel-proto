@@ -9,20 +9,19 @@
 [ nil [ swap cons ] nil nil 0 ] 'bftape' def
 [ dup [ bury [ swap keep ] dip2 ] dip ] 'bfwr' def
 
-[ bftape 'bfprog' invoke [ i zap2 zap2 reverse [ char ] lmap ] i ] '.bf' 0 defrule
-//[ 'bfprog' invoke ] '.bf' 0 defrule
+//[ bftape 'bfprog' invoke [ i zap2 zap2 reverse [ char ] lmap ] i ] '.bf' 0 defrule
+[ 'bfprog' invoke ] '.bf' 0 defrule
 
 //[ bftape 'bf' invoke ] 'bfprog' 0 defrule
 [ 'bf' invoke ] 'bfprog' 0 defrule
+//[ 'bf_program' invoke ] 'bfprog' 0 defrule
 
 [ [ ord cmp eq ] ppchar ] 'ascii' def
 
 [ [] ] 'bf' 1 defrule
-//[ 'bfi' invoke 'bf' invoke cat ] 'bf' 1 defrule
 [ 'bfi' invoke 'bf' invoke cat ] 'bf' 1 defrule
 
-[ [ ord 43 cmp ne ] ppchar [] ] 'bfii' 1 defrule
-[ 43 ascii [ inc ] ] 'bfii' 1 defrule
+//'bfc' 1 defrule
 
 [ [ ord 93 cmp ne ] ppchar [] ] 'bfi' 1 defrule
 [ 43 ascii [ inc ] ] 'bfi' 1 defrule
@@ -33,3 +32,19 @@
 [ 91 ascii 'bf' invoke qot [ bfloop ] cat 93 ascii ] 'bfi' 1 defrule
 
 
+// another attempt
+
+[ [] 'bf_chars' invoke ] 'bf_program' 1 defrule
+
+[ 'bf_char' invoke 'bf_chars' invoke ] 'bf_chars' 1 defrule
+[ ] 'bf_chars' 1 defrule
+
+[ [ ord 93 cmp ne ] ppchar    ] 'bf_char' 1 defrule
+[ 'bf_instruction' invoke cat ] 'bf_char' 1 defrule
+
+[ 43 ascii [ inc  ] ] 'bf_instruction' 1 defrule
+[ 45 ascii [ dec  ] ] 'bf_instruction' 1 defrule
+[ 60 ascii [ bfl  ] ] 'bf_instruction' 1 defrule
+[ 62 ascii [ bfr  ] ] 'bf_instruction' 1 defrule
+[ 46 ascii [ bfwr ] ] 'bf_instruction' 1 defrule
+[ 91 ascii 'bf_program' invoke 93 ascii qot [ bfloop ] cat ] 'bf_instruction' 1 defrule

@@ -1,10 +1,9 @@
 
-module Sema.Error(SemaError(..)) where
+module Sema.Error(SemaError(..), nonTrivialError) where
 
 import Sema.Types
 
 import Control.Monad.Error
-
 
 -- | Semantic errors
 data SemaError v = SEOccurs v (Type v)         -- ^ type checking: occurs check failed
@@ -15,6 +14,9 @@ data SemaError v = SEOccurs v (Type v)         -- ^ type checking: occurs check 
 
 instance Error (SemaError v) where
 
+-- | Non-trivial error is not caused by another error
+nonTrivialError SEInherited = False
+nonTrivialError _ = True
 
 instance (Show v, Eq v) => Show (SemaError v) where
     show (SEOccurs v t) = "Occurs check failed: " ++ show v ++ " = " ++ show t
