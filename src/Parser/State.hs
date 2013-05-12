@@ -3,7 +3,7 @@ module Parser.State (
         -- * Types
         PState(..), Meta(..), TypeInfo(..), PosInfo(..),
         -- * Metadata manipulation
-        (%%), mEps, mergePos, termSetPos, termModifyType, termType, termInferredType, functionDefType,
+        (%%), mEps, mergePos, termSetPos, termModifyType, termType, termInferredType, functionDefType, withTrace,
         -- * State retrieval
         getState, lookupFunc, pTypeTable, pTypeTablePure, lookupParser
     ) where
@@ -14,6 +14,7 @@ import Sema.Error
 import Sema.Types
 import Builtins.Types
 
+import Data.Monoid
 import Text.Parsec
 import Control.Applicative
 import qualified Data.Map as M
@@ -56,7 +57,7 @@ data Meta = Meta {
 
 -- | Merge two metadata instances
 metaMerge (Meta _ p1) (Meta _ p2) = Meta NoType (mergePos p1 p2)
--- | infix operator for metadata mergind
+-- | infix operator for metadata merging
 (%%) = metaMerge
 -- | empty metadata node
 mEps = Meta NoType NoPos
@@ -64,6 +65,10 @@ mEps = Meta NoType NoPos
 -- | set source position
 metaSetPos meta pos = meta { mPosition = pos }
 termSetPos term pos = modifyMeta (flip metaSetPos pos) term
+
+-- | Accumulate subterms with position tracing
+withTrace tr f term = f tr' term <> (mconcat . map (withTrace tr' f) $ subTerms term)
+  where tr' = mPosition (getMeta term) : tr 
 
 -- | term type metadata manipulation
 termModifyType f = modifyMeta (\m -> m { mType = f (mType m) } )
