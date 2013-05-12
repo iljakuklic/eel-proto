@@ -2,7 +2,7 @@
 module Sema.Term (
         Term(..), FunctionDef(..), BuiltIn(..),
         SymTable, Stack(..), Symbol(..),
-        getMeta, setMeta, modifyMeta, mapMeta, onStack, isValue
+        getMeta, setMeta, modifyMeta, mapMeta, onStack, isValue, subTerms
     ) where
 
 import qualified Data.Map as M
@@ -40,6 +40,15 @@ isValue (TFunc _ _ _) = False
 isValue (TComp _ _ _) = False
 --isValue (TQuot _ _  ) = False
 isValue _             = True
+
+-- | Enumerate subterms (one level only). Useful for generic traversals.
+subTerms (TComp  _ a b) = [a, b]
+subTerms (TQuot  _ a)   = [a]
+subTerms (TSumA  _ a)   = [a]
+subTerms (TSumB  _ a)   = [a]
+subTerms (TPair  _ a b) = [a, b]
+subTerms (TList  _ a)   = a
+subTerms _              = []
 
 -- | get term metadata
 getMeta (TFunc  m _ _) = m
