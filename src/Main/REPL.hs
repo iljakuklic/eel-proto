@@ -8,6 +8,7 @@ import Parser.Dump
 import Parser.Core
 import Sema.Term
 import Sema.Infer
+import Backend.Emit
 
 import System.IO
 import Control.Applicative
@@ -45,6 +46,7 @@ repl' n ste = do
                         Left err -> printErr err
                         Right ty -> putStrLn (show term ++ ": " ++ show ty)
                 continue'
+            ':':'g':' ':str -> withParse n ste pinfer str (putStrLn . genTerm) >> continue'
             ':':'d':' ':str -> do
                 withParse n ste pinfer str $ \term -> putStrLn (dumpTerm term)
                 continue'
@@ -91,6 +93,7 @@ helpMsg = unlines [
     "    :q         quit",
     "    :t EXPR    print type of an expression",
     "    :d EXPR    dump AST of an expression",
+    "    :g EXPR    generate LLVM code for EXPR",
     "    :i NAME    dump AST of an user-defined function",
     "    :x         clear the stack",
     "    :s         show current stack",
