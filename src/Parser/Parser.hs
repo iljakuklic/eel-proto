@@ -2,6 +2,7 @@
 module Parser.Parser(runEel, runEelExt, initState, initStack) where
 
 import Sema.Term
+import Sema.Error
 import Parser.State
 import Parser.Core
 import Builtins.Eval
@@ -43,3 +44,8 @@ runEelExt name ste = runEel name ste (Symbol $ getNT name)
 
 -- | Get non-terminal name from the file extension
 getNT name = case Path.takeExtensions name of "" -> ".eel"; ext -> ext
+
+-- | Check the final state for semantic errors, main presence etc.
+--   and return either errors or a list of functions to compile
+semaCheck ste = undefined
+

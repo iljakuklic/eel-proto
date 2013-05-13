@@ -82,11 +82,8 @@ toListUniq :: (Eq a, Foldable t) => t a -> [a]
 toListUniq = nub . toList
 
 -- | Extract row spine from type (top of the stack in in the beginning)
-tyRow :: (Eq v) => Type v -> Row v
-tyRow = Row . tyRow'
-  where
-    tyRow' (TyBin TyProd t1 t2) = t2 : tyRow' t1
-    tyRow' t = [t]
+tyRow (TyBin TyProd t1 t2) = t2 : tyRow t1
+tyRow _t = []
 
 -- | Chack if type is monomorphic (no type variables)
 isTypeMono :: Type v -> Bool

@@ -4,17 +4,21 @@ module Backend.CodeGen(
         -- * Code generation functions
         fill, codegen,
         -- * LLVM types
-        LLType, llInt, llRaw, llPair, llSum, llFloat, llChar,
+        LLType, llTypeDoc, llInt, llRaw, llPair, llSum, llFloat, llChar, llStack,
         -- * Platform specifics
         ptrBytes, ptrBits, sizeBits, intBits, charBits,
         -- * Variables and identifiers
-        LLVar(..), freshRaw, fresh, fresh1, freshGlobal1, llVarName, llTypeDoc, llVarDoc,
+        LLVar(..), llVarName, llVarDoc,
+        llVarInt, llVarChar, llVarFloat, llVarSize, llVarNull,
+        freshRaw, fresh, fresh1, freshGlobal1,
         -- * Stack manipulation
-        getStack, setStack, push, pop, dipn,
+        getStack, setStack, push', pop', dipn,
         -- * Genral code emission
         mapCode, appendRaw, append, appendTmpl,
         -- * LLVM rendering
-        label, instr, comment, braceBlock
+        label, instr, comment, braceBlock,
+        -- * Common LLVM instructions
+        bitcast, callRaw
     ) where
 
 import Control.Monad.State(get, put, modify, runState)
@@ -22,6 +26,7 @@ import qualified Data.Map as M
 import qualified Text.PrettyPrint as P
 import Text.PrettyPrint(($+$), (<+>), (<>))
 import Control.Applicative
+import Data.Char
 
 import Foreign.C.Types
 import Foreign.Storable
@@ -39,11 +44,12 @@ ptrBytes    = sizeOf  (undefined :: CIntPtr)
 -- | LLVM types (low-level)
 data LLType = LLVoid                    -- ^ void type (actually roughly unit type)
             | LLFloat                   -- ^ floating-point type
+            | LLDouble                  -- ^ double precision floating-point type
             | LLInt Int                 -- ^ n-bit integer
             | LLPtr LLType              -- ^ Pointer to a type
             | LLStruct [LLType]         -- ^ Struct
             | LLFunc (LLType) [LLType]  -- ^ function type
-            | LLNamed LLVar             -- ^ named type
+            | LLNamed String            -- ^ named type
             deriving Eq
 
 -- | render type in LLVM syntax
@@ -52,11 +58,12 @@ instance Show LLType where show = show . llTypeDoc
 -- | convert a LLVM type to a Doc
 llTypeDoc LLVoid        = P.text "void"
 llTypeDoc LLFloat       = P.text "float"
+llTypeDoc LLDouble      = P.text "double"
 llTypeDoc (LLInt b)     = P.char 'i' <> P.int b
-llTypeDoc (LLPtr t)     = llTypeDoc t <+> P.char '*'
+llTypeDoc (LLPtr t)     = llTypeDoc t <> P.char '*'
 llTypeDoc (LLStruct ts) = P.braces $ llTypesDoc ts
 llTypeDoc (LLFunc r ts) = llTypeDoc r <+> (P.parens $ llTypesDoc ts)
-llTypeDoc (LLNamed nm)  = P.text (show nm)
+llTypeDoc (LLNamed nm)  = P.text nm
 llTypesDoc = P.hsep . P.punctuate P.comma . fmap llTypeDoc
 
 -- helpers
@@ -67,7 +74,9 @@ llRaw  = LLPtr (LLInt 8)
 llPairT a b = LLStruct [a, b]
 llPair = llPairT llRaw llRaw
 llSum  = llPairT llRaw llBool
-llFloat = LLFloat
+llFloat = if ptrBits == 64 then LLDouble else LLFloat
+llSize = LLInt sizeBits
+llStack = LLNamed "%eel.stack" 
 
 -- | LLVM variable
 data LLVar = LLVar LLType String deriving (Eq)
@@ -80,6 +89,17 @@ llVarDoc (LLVar ty name) = llTypeDoc ty <+> P.text name
 
 -- | get LLVM variable name
 llVarName (LLVar _ty nm) = nm
+
+-- | LLVM variable holding an integer constant
+llVarInt   = LLVar llInt . show
+-- | LLVM variable holding a floating-point constant
+llVarFloat = LLVar llFloat . show
+-- | LLVM variable holding a character constant
+llVarChar  = LLVar llInt . show . ord
+-- | LLVM variable holding a size_t constant
+llVarSize  = LLVar llSize . show
+-- | LLVM variable holding a NULL pointer constant
+llVarNull  = LLVar llRaw "null"
 
 -- | Code generator state
 data CodeGenState = CodeGenState {
@@ -112,10 +132,10 @@ getStack = cgStack <$> get
 setStack stk = modify (\ste -> ste { cgStack = stk })
 
 -- | Push an item onto the stack
-push x = modify (\ste -> ste { cgStack = x : cgStack ste })
+push' x = modify (\ste -> ste { cgStack = x : cgStack ste })
 
 -- | Pop an item from the stack
-pop = do (x:xs) <- getStack; setStack xs; return x
+pop' = do (x:xs) <- getStack; setStack xs; return x
 
 -- | perform code generation n levels deep in the stack
 dipn n cgen = do
@@ -169,6 +189,9 @@ comment text args = append (P.semi <+> fill text args)
 
 -- | Enclose a document in braces
 braceBlock doc = P.lbrace $+$ indent doc $+$ P.rbrace
+
+bitcast ty nme val = instr ty nme "bitcast # to #" [llVarDoc val, llTypeDoc ty]
+callRaw ty name fname args = instr ty name "call # #(#)" [P.text fname, llTypeDoc ty, P.hsep . P.punctuate P.comma . fmap llVarDoc $ args]
 
 -- | Run code generator
 codegen g = fst $ runState (g >> getCode) (CodeGenState [] M.empty P.empty)
