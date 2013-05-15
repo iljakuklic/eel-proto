@@ -78,7 +78,7 @@ instance Evaluable BuiltIn where
             _ -> fail ("Type error: sel applied to " ++ show x)
 
     -- let binding
-    eval BIlet     = fail "Let not implemented"
+    --eval BIlet     = fail "Let not implemented"
 
     -- function definition
     eval BIdef = do

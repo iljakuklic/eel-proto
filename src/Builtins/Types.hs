@@ -80,11 +80,11 @@ builtInType BIchar   = [a, tInt] ~~> [a, tChar]
  -- IO builtins
 builtInType BIgetchar   = [a] ~~> [a, tMaybe tChar]
 builtInType BIputchar   = [a, tChar] ~~> [a]
-builtInType BIreadfile  = [a, tString] ~~> [a, tMaybe tString]
-builtInType BIwritefile = [a, tString, tString] ~~> [a, tBool]
+--builtInType BIreadfile  = [a, tString] ~~> [a, tMaybe tString]
+--builtInType BIwritefile = [a, tString, tString] ~~> [a, tBool]
 -- Compiler funcs
 builtInType BIdef     = [a, fun e [b] [c], tString] ~+> [a]
-builtInType BIlet     = [a, fun e [b] [c], tString] ~+> [c]
+--builtInType BIlet     = [a, fun e [b] [c], tString] ~+> [c]
 builtInType BIpromote = [a, tString] ~+> [a, [b] ~~> [c]]
 -- Parsing functions
 builtInType BIdefrule = [a, [b] ~*> [c], tString, tInt] ~+> [a]
