@@ -23,9 +23,10 @@ main' = do
                     Left err  -> hPutStrLn stderr (show err)
                     Right ste -> do
                         when (verboseOutput settings) $ do
+                            putStrLn "--------------------"
                             printFuncs ste
                             putStrLn "--------------------"
-                        unless (interactMode settings) (printStack ste)
+                            unless (interactMode settings) (printStack ste)
 
 main = main' `E.catch` (\err -> putStrLn ("ERROR: \n" ++ show (err :: IOError)))
 

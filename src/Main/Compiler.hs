@@ -7,6 +7,9 @@ import Parser.Parser
 import Prelude hiding (catch)
 import Control.Monad
 import System.FilePath
+import System.Directory
+import System.Process
+import System.IO
 import Control.Exception
 
 -- | Input specification
@@ -18,10 +21,12 @@ data InputSpec
 data Settings = Settings {
         outputFilePath :: FilePath,         -- ^ output binary file
         llvmFilePath   :: Maybe FilePath,   -- ^ output LLVM file
+        asmFilePath    :: Maybe FilePath,   -- ^ output assembly file
         verboseOutput  :: Bool,             -- ^ extra debugging output
         interactMode   :: Bool,             -- ^ enable interactive mode
         noPreludeFlag  :: Bool,             -- ^ disable prelude autoload
         evalString     :: String,           -- ^ string to evaluate
+        mainFuncName   :: String,           -- ^ name of the main function
         inputFilePaths :: [FilePath]        -- ^ input files to read
     } deriving Show
 
@@ -55,9 +60,27 @@ readIn (InputLit  prog) = return ("<commandline>", prog)
 runCompiler settings = do
     inp <- input
     let res' = parseStrs initState inp
-    if interactMode settings
+    res'' <- if interactMode settings
         then either (return . Left) (\ste' -> repl ste') res'
         else return res'
+    ste'' <- either (fail . show) return res''
+    case semaCheck ste'' of
+        Right tab -> do
+            -- LLVM file creation
+            (llFName, llFHandle) <- openTempFile "." "out.ll"
+            hPutStrLn llFHandle (code tab)
+            hClose llFHandle
+            let asmFName = asmFileNam llFName
+            -- call LLVM compiler
+            _ <- rawSystem "llc" ["-o", asmFName, llFName]
+            -- call gcc to link stuff
+            _ <- rawSystem "gcc" ["-lgc", "-o", outputFilePath settings, asmFName]
+            -- move or delete .ll file
+            moveOrDel llFName (llvmFilePath settings)
+            -- move or delete .s file
+            moveOrDel asmFName (asmFilePath settings)
+        Left errs -> putStrLn "Semantic errors:" >> putStrLn (show errs)
+    return res''
   where
     infiles    = map InputFile $ inputFilePaths settings
     input      = mapM readIn inputSpec
@@ -65,5 +88,10 @@ runCompiler settings = do
     cmdeval'   = [InputLit (evalString settings)]
     inputSpec  = prelude' ++ infiles ++ cmdeval'
     onFlag f x = if f settings then x else []
+    code       = show . emitModule (if mainName == "" then Nothing else Just mainName)
+    mainName   = mainFuncName settings
+    asmFileNam = flip replaceExtension "s"
+    moveOrDel fn Nothing = removeFile fn
+    moveOrDel fn (Just fn') = renameFile fn fn'
 
 

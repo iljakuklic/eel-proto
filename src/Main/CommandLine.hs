@@ -64,10 +64,12 @@ optPosArgs = ([], reqPosArgs)
 cmdLineDesc = Settings
     <$?> optSwitch   ["-o", "--output"] "a.out" id
     <|?> maybeSwitch ["-L", "--LLVM", "--llvm"] id
+    <|?> maybeSwitch ["-S", "--ASM", "--asm"] id
     <|?> boolSwitch  ["-v", "--verbose"]
     <|?> boolSwitch  ["-i", "--interactive"]
     <|?> boolSwitch  ["-P", "--no-prelude"]
     <|?> optSwitch   ["-e", "--eval"] "" id
+    <|?> optSwitch   ["-M", "--main"] "main" id
     <|?> optPosArgs
 
 -- | Command-line parser
@@ -93,17 +95,19 @@ commandLineHelp prog = P.text "" $+$ descr $+$ usage $+$ optDesc
         "version " ++ showVersion EEL.version,
         "by Lukáš Kuklínek <xkukli01@stud.fit.vutbr.cz>",
         "Part of the master's thesis for Faculty of Information Technology,",
-        "Brno University of Technology, Brno, Czech Republic."
+        "Brno University of Technology, Brno, Czech Republic, 2013."
       ]
     usage = section "Usage:" (P.text prog <+> P.text "[OPTIONS] [SOURCES...]")
     optDesc = section "Options:" optList
     optList = P.vcat [
         ln "-o FILE, --output FILE" "generate output binary file named FILE",
         ln "-L FILE, --llvm FILE" "generate LLVM IR text file named FILE",
+        ln "-S FILE, --asm FILE" "generate assembly source file named FILE",
         ln "-v, --verbose" "increase output verbosity",
         ln "-i, --interactive" "launch interactive read-eval-print interpreter",
         ln "-P, --no-prelude" "do not load the prelude library automatically",
         ln "-e EXPR, --eval EXPR" "evaluate given EXPRession in EEL core",
+        ln "-M NAME, --main NAME" "specify the name of the main function",
         ln "-h, --help" "show this help message"
       ]
     ln opts desc = P.text opts $$ P.nest 4 (P.text desc)

@@ -1,11 +1,12 @@
 
-module Parser.Parser(runEel, runEelExt, initState, initStack) where
+module Parser.Parser(runEel, runEelExt, initState, initStack, emitModule, semaCheck) where
 
 import Sema.Term
 import Sema.Error
 import Parser.State
 import Parser.Core
 import Builtins.Eval
+import Backend.Emit
 
 import qualified Data.Map as M
 import qualified Text.Parsec as P
@@ -47,5 +48,6 @@ getNT name = case Path.takeExtensions name of "" -> ".eel"; ext -> ext
 
 -- | Check the final state for semantic errors, main presence etc.
 --   and return either errors or a list of functions to compile
-semaCheck ste = undefined
+semaCheck ste = Right symTab :: Either (SemaError Symbol) (SymTable Meta)
+  where symTab = pSymTable ste
 
