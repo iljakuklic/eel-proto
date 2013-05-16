@@ -142,7 +142,7 @@ printMain (Just mainName) = do
     label "main"
     comment "initialise the stack" ([] :: [Int])
     setStack (LLVar llStack "null")
-    args <- load llList "args" arglP
+    args <- load llList "args" argl
     push args
     comment "Invoke main #" [mainName]
     initStk <- getStack
