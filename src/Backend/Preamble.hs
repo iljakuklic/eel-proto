@@ -8,7 +8,7 @@ module Backend.Preamble(
         -- * Runtime functions
         alloc, push, pop, generateFunc, mkPair, unPair, call,
         -- * Quotation runtime support
-        mkQotData, mkQotFunc, mkQotComp, runQot
+        mkQotData, mkQotFunc, mkQotComp, mkQotFixp, runQot
     ) where
 
 import qualified Text.PrettyPrint as P
@@ -66,9 +66,6 @@ preamble mainName = do
     -- EEL quotation runners
     printEelRunners
     blankLine
-    -- EEL fixpoint operator
-    printFix
-    blankLine
 
 -- | C string to EEL string conversion
 printC2S = do
@@ -107,7 +104,6 @@ printEelRunners = do
         f <- bitcast llQot "f" fr
         g <- bitcast llQot "g" gr
         runQot f >> runQot g
-        --call f stk >>= call g
     blankLine
     appendRaw $ P.text "; Constant data quotation runner"
     printOneEelRunner "data" $ \fr _gr -> do
@@ -115,9 +111,14 @@ printEelRunners = do
     blankLine
     appendRaw $ P.text "; Single function runner"
     printOneEelRunner "func" $ \fr _gr -> do
-        fun <- bitcast llStackFunc "fun" fr 
+        fun <- bitcast llStackFunc "fun" fr
         getStack >>= callRaw llStack "stk" (llVarName fun) . return >>= setStack
-
+    blankLine
+    appendRaw $ P.text "; Fixed point runner"
+    printOneEelRunner "fixp" $ \fr _gr -> do
+        qot <- bitcast llQot "qot" fr
+        mkQotFixp qot >>= push
+        runQot qot
 
 printOneEelRunner name body = do
     [fr, gr] <- fresh llRaw ["fr", "gr"]
@@ -181,16 +182,6 @@ printMain (Just mainName) = do
     ret retval
     appendRaw $ P.rbrace
 
-printFix = generateFunc "@eelfix" (P.text "Fixpoint operator") $ do
-    comment "Get recursed function" ([] :: [Int])
-    funq <- pop llRaw "func"
-    comment "EELfix quotation" ([] :: [Int])
-    fix <- mkQotFunc (LLVar llStackFunc "@eelfix")
-    comment "Create the fixpoint function and push" ([] :: [Int])
-    mkQotComp funq fix >>= push
-    comment "Run the function with itself on the top of the stack" ([] :: [Int])
-    runQot funq
-
 -- | make a quotation
 mkQotRaw f a b = do
     qot <- alloc llQot "qot" (3*ptrBytes)
@@ -207,6 +198,8 @@ mkQotComp a b = mkQotRaw (LLVar llQotFunc "@eelrun.comp") a b
 mkQotData d   = mkQotRaw (LLVar llQotFunc "@eelrun.data") d (LLVar llRaw "null")
 -- | Create a simple function quotation
 mkQotFunc f   = mkQotRaw (LLVar llQotFunc "@eelrun.func") f (LLVar llRaw "null")
+-- | Create a fixed point quotation
+mkQotFixp f   = mkQotRaw (LLVar llQotFunc "@eelrun.fixp") f (LLVar llRaw "null")
 
 -- | run a quotation
 runQot qot' = do

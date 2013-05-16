@@ -154,7 +154,7 @@
 // right-associative scan
 [ bury [ swap ] tac qot [ dip [ dup ] dip cons ] cat nil rfold [ zap ] dip ] 'rscan' def
 // list endofunctor
-[ qot [ dip cons ] cat nil rfold ] 'lmap' def
+[ qot [ dip cons ] cat nil fold reverse ] 'lmap' def
 // list concatenation
 [ [ cons ] swap rfold ] 'append' def
 [ swap append ] 'prepend' def

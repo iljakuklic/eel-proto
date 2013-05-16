@@ -73,7 +73,7 @@ emitBI BIid2 = return ()
 emitBI BIqot = pop llRaw "data" >>= mkQotData >>= push
 emitBI BIdip = do fun <- pop llRaw "fun"; bak <- pop llRaw "bak"; runQot fun; push bak
 emitBI BIcat = do f2 <- pop llRaw "fun"; f1 <- pop llRaw "bak"; mkQotComp f1 f2 >>= push
-emitBI BIfix = call "@eelfix"
+emitBI BIfix = pop llRaw "fixq" >>= (\q -> mkQotFixp q >>= push >> runQot q)
 -- unit
 emitBI BIunit = push (LLVar llRaw "null")
 -- pairs
