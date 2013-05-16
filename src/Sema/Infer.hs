@@ -1,5 +1,5 @@
 
-module Sema.Infer (infer, stackInfer) where
+module Sema.Infer (infer, stackInfer, inferUnify) where
 
 import Sema.Types
 import Sema.Error
@@ -72,6 +72,9 @@ unCollide t1 t2 = subst sm t2
 
 -- | uncollide over types
 unCollideT f t1 t2 = f t1 (unCollide t1 t2)
+
+-- | infer unification substitution for the first type
+inferUnify = unCollideT unify
 
 -- | rename type variables to nice names
 niceTyVars t = subst (M.fromList (zip (toListUniq t) (map TyVar genTyVars))) t

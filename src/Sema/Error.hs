@@ -10,7 +10,8 @@ data SemaError v = SEOccurs v (Type v)         -- ^ type checking: occurs check 
                  | SEUnify (Type v) (Type v)   -- ^ type checking: unification failed
                  | SESymbol v                  -- ^ symbol lookup failed
                  | SEPhase                     -- ^ phase mismatch
-                 | SEMain (Type v)             -- ^ main function has a wrong type
+                 | SEMain (SemaError v)        -- ^ main function has a wrong type
+                 | SEMainMissing               -- ^ main function has a wrong type
                  | SEInherited                 -- ^ semantic error inherited from a subterm
 
 instance Error (SemaError v) where
@@ -26,3 +27,4 @@ instance (Show v, Eq v) => Show (SemaError v) where
     show (SEPhase)      = "Phase mismatch"
     show (SEInherited)  = "Inherited error"
     show (SEMain v)     = "The main function has a wrong type: " ++ show v
+    show SEMainMissing  = "The main function is missing"

@@ -3,9 +3,11 @@ module Parser.Parser(runEel, runEelExt, initState, initStack, emitModule, semaCh
 
 import Sema.Term
 import Sema.Error
+import Sema.Infer
 import Parser.State
 import Parser.Core
 import Builtins.Eval
+import Builtins.Types
 import Backend.Emit
 
 import qualified Data.Map as M
@@ -48,6 +50,15 @@ getNT name = case Path.takeExtensions name of "" -> ".eel"; ext -> ext
 
 -- | Check the final state for semantic errors, main presence etc.
 --   and return either errors or a list of functions to compile
-semaCheck ste = Right symTab :: Either (SemaError Symbol) (SymTable Meta)
-  where symTab = pSymTable ste
+semaCheck mainNme ste = case checkMain ste mainNme of
+    [] -> Right (pSymTable ste)
+    xs -> Left xs
 
+-- | check the main function for presence and type
+checkMain _ste Nothing = []
+checkMain ste (Just nme) = case M.lookup (Symbol nme) (pSymTable ste) of
+    Nothing -> [SEMainMissing]
+    Just (FDUser term) -> case termType term of
+        Left _er -> []
+        Right ty -> either (return . SEMain) (const []) (inferUnify ty mainType)
+    _ -> error "checkMain: fatal error"
