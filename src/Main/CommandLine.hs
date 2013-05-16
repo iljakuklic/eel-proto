@@ -62,7 +62,7 @@ optPosArgs = ([], reqPosArgs)
 
 -- | Description of available command-line options for normal mode (not help)
 cmdLineDesc = Settings
-    <$?> optSwitch   ["-o", "--output"] "a.out" id
+    <$?> maybeSwitch ["-o", "--output"] id
     <|?> maybeSwitch ["-L", "--LLVM", "--llvm"] id
     <|?> maybeSwitch ["-S", "--ASM", "--asm"] id
     <|?> boolSwitch  ["-v", "--verbose"]

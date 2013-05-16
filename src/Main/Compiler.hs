@@ -19,7 +19,7 @@ data InputSpec
 
 -- | Compiler settings
 data Settings = Settings {
-        outputFilePath :: FilePath,         -- ^ output binary file
+        outputFilePath :: Maybe FilePath,   -- ^ output binary file
         llvmFilePath   :: Maybe FilePath,   -- ^ output LLVM file
         asmFilePath    :: Maybe FilePath,   -- ^ output assembly file
         verboseOutput  :: Bool,             -- ^ extra debugging output
@@ -64,21 +64,24 @@ runCompiler settings = do
         then either (return . Left) (\ste' -> repl ste') res'
         else return res'
     ste'' <- either (fail . show) return res''
-    case semaCheck ste'' of
+    case semaCheck mainName ste'' of
         Right tab -> do
             -- LLVM file creation
             (llFName, llFHandle) <- openTempFile "." "out.ll"
             hPutStrLn llFHandle (code tab)
             hClose llFHandle
-            let asmFName = asmFileNam llFName
+            let asmFName = flip replaceExtension "s"   llFName
+            let outFName = flip replaceExtension "bin" llFName
             -- call LLVM compiler
             _ <- rawSystem "llc" ["-o", asmFName, llFName]
             -- call gcc to link stuff
-            _ <- rawSystem "gcc" ["-lgc", "-lm", "-o", outputFilePath settings, asmFName]
+            _ <- rawSystem "gcc" ["-lgc", "-lm", "-o", outFName, asmFName]
             -- move or delete .ll file
             moveOrDel llFName (llvmFilePath settings)
             -- move or delete .s file
             moveOrDel asmFName (asmFilePath settings)
+            -- move or delete output binary
+            moveOrDel outFName (outputFilePath settings)
         Left errs -> putStrLn "Semantic errors:" >> putStrLn (show errs)
     return res''
   where
@@ -88,10 +91,10 @@ runCompiler settings = do
     cmdeval'   = [InputLit (evalString settings)]
     inputSpec  = prelude' ++ infiles ++ cmdeval'
     onFlag f x = if f settings then x else []
-    code       = show . emitModule (if mainName == "" then Nothing else Just mainName)
-    mainName   = mainFuncName settings
-    asmFileNam = flip replaceExtension "s"
+    code       = show . emitModule mainName
     moveOrDel fn Nothing = removeFile fn
     moveOrDel fn (Just fn') = renameFile fn fn'
-
-
+    genCode = any genFile [llvmFilePath, asmFilePath, outputFilePath]
+    genFile fun = (fun settings) /= Nothing
+    mainSett = mainFuncName settings
+    mainName = if genCode && mainSett /= "" then Just mainSett else Nothing
