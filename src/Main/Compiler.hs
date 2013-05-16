@@ -75,13 +75,15 @@ runCompiler settings = do
             -- call LLVM compiler
             _ <- rawSystem "llc" ["-o", asmFName, llFName]
             -- call gcc to link stuff
-            _ <- rawSystem "gcc" ["-lgc", "-lm", "-o", outFName, asmFName]
+            when (outputFilePath settings /= Nothing) . void $
+                rawSystem "gcc" ["-lgc", "-lm", "-o", outFName, asmFName]
             -- move or delete .ll file
             moveOrDel llFName (llvmFilePath settings)
             -- move or delete .s file
             moveOrDel asmFName (asmFilePath settings)
             -- move or delete output binary
-            moveOrDel outFName (outputFilePath settings)
+            when (outputFilePath settings /= Nothing) $
+                moveOrDel outFName (outputFilePath settings)
         Left errs -> putStrLn (show errs)
     return res''
   where
