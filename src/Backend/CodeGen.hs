@@ -4,7 +4,7 @@ module Backend.CodeGen(
         -- * Code generation functions
         fill, codegen,
         -- * LLVM types
-        LLType, llTypeDoc, llInt, llIntNative, llRaw, llPair, llSum, llFloat, llChar, llNamed, llStruct, llPtr, llSize, llBool,
+        LLType(..), llTypeDoc, llInt, llIntNative, llRaw, llPair, llSum, llFloat, llChar, llNamed, llStruct, llPtr, llSize, llBool, llFunc,
         -- * Platform specifics
         ptrBytes, ptrBits, sizeBits, intBits, charBits,
         -- * Variables and identifiers
@@ -14,7 +14,7 @@ module Backend.CodeGen(
         -- * Stack manipulation
         getStack, setStack,
         -- * Genral code emission
-        mapCode, appendRaw, append, appendTmpl, blankLine,
+        getCode, mapCode, addAnon, getAnons, appendRaw, append, appendTmpl, blankLine,
         -- * LLVM constructs
         label, instr, comment, braceBlock, funcHeader, funcPrototype,
         -- * LLVM instructions
@@ -62,7 +62,7 @@ llTypeDoc LLDouble      = P.text "double"
 llTypeDoc (LLInt b)     = P.char 'i' <> P.int b
 llTypeDoc (LLPtr t)     = llTypeDoc t <> P.char '*'
 llTypeDoc (LLStruct ts) = P.braces $ llTypesDoc ts
-llTypeDoc (LLFunc r ts) = llTypeDoc r <+> (P.parens $ llTypesDoc ts)
+llTypeDoc (LLFunc r ts) = llTypeDoc r <> (P.parens $ llTypesDoc ts)
 llTypeDoc (LLNamed nm)  = P.text nm
 llTypesDoc = P.hsep . P.punctuate P.comma . fmap llTypeDoc
 
@@ -73,7 +73,7 @@ llChar = LLInt charBits
 llRaw  = LLPtr (LLInt 8)
 llPairT a b = LLStruct [a, b]
 llPair = llPairT llRaw llRaw
-llSum  = llPairT llRaw llBool
+llSum  = llPairT llInt llRaw
 llFloat = if ptrBits == 64 then LLDouble else LLFloat
 llSize = LLInt sizeBits
 llNamed = LLNamed
@@ -83,6 +83,7 @@ llIntNative = LLInt intBits
 llIsFloating LLFloat = True
 llIsFloating LLDouble = True
 llIsFloating _ = False
+llFunc = LLFunc
 
 -- | LLVM variable
 data LLVar = LLVar LLType String deriving (Eq)
@@ -98,7 +99,7 @@ llVarsDoc = P.sep . P.punctuate P.comma . map llVarDoc
 llVarName (LLVar _ty nm) = nm
 
 -- | LLVM variable holding an integer constant
-llVarInt   = LLVar llInt . show
+llVarInt n = LLVar llInt (show (n :: Int))
 -- | LLVM variable holding a floating-point constant
 llVarFloat = LLVar llFloat . show
 -- | LLVM variable holding a character constant
@@ -112,7 +113,8 @@ llVarNull  = LLVar llRaw "null"
 data CodeGenState = CodeGenState {
         cgStack  :: LLVar,             -- ^ pointer to the top of the stack
         cgVars   :: M.Map String Int,  -- ^ fresh variables counter
-        cgOutput :: P.Doc              -- ^ generated document with source
+        cgOutput :: P.Doc,             -- ^ generated document with source
+        cgAnons  :: [P.Doc]            -- ^ anonymous function list
     } deriving Show
 
 -- | generate fresh variables w/ given prefixes (must all be unique)
@@ -141,8 +143,14 @@ setStack stk = modify (\ste -> ste { cgStack = stk })
 -- | Modify the code generated so far
 mapCode f = modify (\ste -> ste { cgOutput = f $ cgOutput ste})
 
+-- | Add anonymous function quotation
+addAnon doc = modify (\ste -> ste { cgAnons = doc : cgAnons ste })
+
 -- | get the generated code
 getCode = cgOutput <$> get
+
+-- | get anonymous functions
+getAnons = cgAnons <$> get
 
 -- | Add source code to the output buffer
 appendRaw code = mapCode ($+$ code)
@@ -168,11 +176,8 @@ fill tmpl args = P.text $ fill' tmpl args
 -- | indent the source text
 indent = P.nest 8
 
--- | Convert any Show-able type to a Doc
-showDoc = P.text . show
-
 -- | Emit label LLVM code
-label lab = appendRaw (P.nest 4 (P.text lab <> P.colon))
+label lab = blankLine >> appendRaw (P.nest 4 (P.text lab <> P.colon))
 
 -- | Emit an instruction w/ return value
 instr ty varname tmpl args = do
@@ -181,20 +186,20 @@ instr ty varname tmpl args = do
     return var
 
 -- | Emit a comment
-comment text args = append (P.semi <+> fill text args)
+comment text args = blankLine >> append (P.semi <+> fill text args)
 
 -- | Enclose a document in braces
 braceBlock doc = P.lbrace $+$ indent doc $+$ P.rbrace
 
 -- | type conversion instrunction
-bitcast ty nme val@(LLVar vty _) | vty == ty = return val
+bitcast ty _nme val@(LLVar vty _) | vty == ty = return val
 bitcast ty@(LLInt _) nme val@(LLVar (LLPtr _) _) = instr ty nme "ptrtoint # to #" [llVarDoc val, llTypeDoc ty]
 bitcast ty@(LLPtr _) nme val@(LLVar (LLInt _) _) = instr ty nme "inttoptr # to #" [llVarDoc val, llTypeDoc ty]
 bitcast ty' nme val@(LLVar (LLPtr _) _)    | llIsFloating ty' = bitcast llInt "tmp" val >>= bitcast ty' nme
 bitcast ty'@(LLPtr _) nme val@(LLVar ty _) | llIsFloating ty  = bitcast llInt "tmp" val >>= bitcast ty' nme
 bitcast ty nme val = instr ty nme "bitcast # to #" [llVarDoc val, llTypeDoc ty]
 -- | getelementptr instruction
-gep ty nme var idxs = instr ty nme "getelementptr #, #" [llVarDoc var, llVarsDoc $ map (LLVar (LLInt 32) . show) idxs]
+gep ty nme var idxs = instr ty nme "getelementptr #, #" [llVarDoc var, llVarsDoc $ map (LLVar (LLInt 32) . show) (idxs :: [Int])]
 -- | get a pointer to the first member of a pair
 gepFst ty nme var = gep ty nme var [0, 0 :: Int]
 -- | get a pointer to the second member of a pair
@@ -221,4 +226,4 @@ funcHeader rtype fname input = P.text "define" <+> llTypeDoc rtype <+> P.text fn
 funcPrototype rtype fname input = appendRaw $ P.text "declare" <+> llTypeDoc rtype <+> P.text fname <> P.parens (llTypesDoc input)
 
 -- | Run code generator
-codegen g = fst $ runState (g >> getCode) (CodeGenState llVarNull M.empty P.empty)
+codegen gen = fst $ runState (gen >> getCode) (CodeGenState llVarNull M.empty P.empty [])

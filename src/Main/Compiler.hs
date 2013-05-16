@@ -74,7 +74,7 @@ runCompiler settings = do
             -- call LLVM compiler
             _ <- rawSystem "llc" ["-o", asmFName, llFName]
             -- call gcc to link stuff
-            _ <- rawSystem "gcc" ["-lgc", "-o", outputFilePath settings, asmFName]
+            _ <- rawSystem "gcc" ["-lgc", "-lm", "-o", outputFilePath settings, asmFName]
             -- move or delete .ll file
             moveOrDel llFName (llvmFilePath settings)
             -- move or delete .s file
