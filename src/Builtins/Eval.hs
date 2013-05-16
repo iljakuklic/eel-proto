@@ -48,7 +48,10 @@ instance Evaluable (Term Meta) where
 -- | Function definition evaluation
 instance Evaluable (FunctionDef Meta) where
     eval (FDBuiltIn bi) = eval bi
-    eval (FDUser term)  = eval term
+    eval (FDUser term)  = do
+        case termType term of
+            Right _ -> eval term
+            Left _  -> fail "Calling a maltyped function"
 
 -- | Builtin evaluation
 instance Evaluable BuiltIn where
@@ -83,11 +86,8 @@ instance Evaluable BuiltIn where
     -- function definition
     eval BIdef = do
         name <- pop >>= termToString
-        TQuot _ body' <- pop
-        let body = infer body'
-        case termType body of
-            Left err -> fail ("ERROR while inferring type for function '" ++ name ++ "': " ++ show err)
-            Right _  -> addFunc (Symbol name) (FDUser body)
+        TQuot _ body <- pop
+        addFunc (Symbol name) (FDUser $ infer body)
 
     -- function lookup from a string
     eval BIpromote = do

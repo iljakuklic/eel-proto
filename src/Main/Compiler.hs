@@ -65,7 +65,7 @@ runCompiler settings = do
         else return res'
     ste'' <- either (fail . show) return res''
     case semaCheck mainName ste'' of
-        Right tab -> do
+        Right tab -> when genCode $ do
             -- LLVM file creation
             (llFName, llFHandle) <- openTempFile "." "out.ll"
             hPutStrLn llFHandle (code tab)
@@ -82,7 +82,7 @@ runCompiler settings = do
             moveOrDel asmFName (asmFilePath settings)
             -- move or delete output binary
             moveOrDel outFName (outputFilePath settings)
-        Left errs -> putStrLn "Semantic errors:" >> putStrLn (show errs)
+        Left errs -> putStrLn (show errs)
     return res''
   where
     infiles    = map InputFile $ inputFilePaths settings

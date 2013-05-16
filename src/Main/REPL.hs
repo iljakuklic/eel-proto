@@ -65,7 +65,10 @@ repl' n ste = do
             line      -> do
                 ste'' <- case runParser (onLine n >> coreTopParser) ste "<interactive>" line of
                     Left err   -> printErr err >> return ste
-                    Right ste' -> (putStrLn $ show $ pStack ste') >> return ste'
+                    Right ste' ->
+                        case semaCheck Nothing ste' of
+                            Right _   -> (putStrLn $ show $ pStack ste') >> return ste'
+                            Left errs -> (putStrLn $ show errs)          >> return ste
                 continue ste''
 
 -- print stack contents

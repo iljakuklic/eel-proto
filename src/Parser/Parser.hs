@@ -6,6 +6,7 @@ import Sema.Error
 import Sema.Infer
 import Parser.State
 import Parser.Core
+import Parser.Dump
 import Builtins.Eval
 import Builtins.Types
 import Backend.Emit
@@ -14,7 +15,7 @@ import qualified Data.Map as M
 import qualified Text.Parsec as P
 import qualified System.FilePath as Path
 
--- initial symbol table filled w/ built-ins
+-- | initial symbol table filled w/ built-ins
 initSymTab = builtInsTable
 -- | Initial stack is empty
 initStack = Stack []
@@ -50,15 +51,25 @@ getNT name = case Path.takeExtensions name of "" -> ".eel"; ext -> ext
 
 -- | Check the final state for semantic errors, main presence etc.
 --   and return either errors or a list of functions to compile
-semaCheck mainNme ste = case checkMain ste mainNme of
+semaCheck mainNme ste = case checkTypes ste ++ checkMain ste mainNme of
     [] -> Right (pSymTable ste)
-    xs -> Left xs
+    xs -> Left $ ErrorSet xs
 
 -- | check the main function for presence and type
 checkMain _ste Nothing = []
 checkMain ste (Just nme) = case M.lookup (Symbol nme) (pSymTable ste) of
-    Nothing -> [SEMainMissing]
+    Nothing -> mkErr SEMainMissing
     Just (FDUser term) -> case termType term of
         Left _er -> []
-        Right ty -> either (return . SEMain) (const []) (inferUnify ty mainType)
+        Right ty -> either (mkErr . SEMain) (const []) (inferUnify ty mainType)
     _ -> error "checkMain: fatal error"
+  where mkErr = return . TracedError (Symbol nme) []
+
+-- | Check type metadata annotations
+checkTypes ste = concatMap fproc funcs
+  where
+    funcs = [ (sym, term) | (sym, FDUser term) <- M.toList (pSymTable ste) ]
+    fproc (sym, term) = [ TracedError sym tr err | (tr, err) <- withTrace [] tracer term ]
+    tracer tr term = case termType term of
+        Left err | nonTrivialError err -> [(tr, err)]
+        _ -> []
