@@ -12,6 +12,7 @@ import Backend.Runtime
 import qualified Text.PrettyPrint as P
 import Text.PrettyPrint((<+>))
 import qualified Data.Map as M
+import Control.Monad
 
 -- | Emit LLVM code for all entries in a symbol table
 emitModule mainName symTab = codegen $ do
@@ -37,7 +38,21 @@ eelName nme = "@eel." ++ nme
 -- | Emit code for EEL term
 emitTerm (TComp _ f g)   = emitTerm f >> emitTerm g
 emitTerm (TFunc _ nme t) = emitFD nme t
-emitTerm (TQuot _ f)     = do
+emitTerm t = do
+    comment "Pushing value # to the stack" [t]
+    emitVal t >>= push
+
+-- | Emit code for EEL value
+emitVal (TInt _ x)    = return $ llVarInt   x
+emitVal (TFloat _ x)  = return $ llVarFloat x
+emitVal (TChar _ x)   = return $ llVarChar  x
+emitVal (TSumA _ x)   = emitVal x >>= mkSum "valA" 0
+emitVal (TSumB _ x)   = emitVal x >>= mkSum "valB" 1
+emitVal (TPair _ a b) = do va <- emitVal a; vb <- emitVal b; mkPair "pair" va vb
+emitVal (TList _ xs)  = foldM mkItem (LLVar llList "null") (reverse xs)
+    where mkItem a b  = do emitVal b >>= flip (mkPair "item") a
+emitVal (TUnit _)     = return llVarNull
+emitVal (TQuot _ f)   = do
     comment "Quotation: #" [f]
     -- backup code generated so far
     codeBak <- getCode
@@ -51,16 +66,8 @@ emitTerm (TQuot _ f)     = do
     mapCode (const codeBak)
     setStack stkBak
     -- generate quotation
-    mkQotFunc (LLVar llStackFunc qname) >>= push
-emitTerm t = do
-    comment "Pushing value # to the stack" [t]
-    emitVal t
-
--- | Emit code for EEL value
-emitVal (TInt _ x)   = push $ llVarInt   x
-emitVal (TFloat _ x) = push $ llVarFloat x
-emitVal (TChar _ x)  = push $ llVarChar  x
-emitVal v = comment "Not implemented: #" [v]
+    mkQotFunc (LLVar llStackFunc qname)
+emitVal v = error ("Emiting value: " ++ show v)
 
 -- | Emit function call or builtin code
 emitFD nme (FDUser _term)  = comment "Call #" [nme] >> call (eelName $ show nme)
