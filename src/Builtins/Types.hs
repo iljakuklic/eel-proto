@@ -1,6 +1,6 @@
 
 
-module Builtins.Types(builtInType) where
+module Builtins.Types(builtInType, mainType) where
 
 import Builtins.Builtins
 import Sema.Types
@@ -28,10 +28,15 @@ z ~~> y = fun (TyVar . genTyVar . mkRow $ z ++ y) z y
 z ~+> y = fun (TyPhase TyCompile) z y
 -- | Parse-time function helper
 z ~*> y = fun (TyPhase TyParse) z y
+-- | Run-time function helper
+z ~-> y = fun (TyPhase TyParse) z y
 -- | Unary function type
 unary t = [a, t] ~~> [a, t]
 -- | Binary function type
 binary t = [a, t, t] ~~> [a, t]
+
+-- | type the main function shall have
+mainType = [tUnit, tList tString] ~-> [tUnit, tInt]
 
 -- | get type of a builtin function
 builtInType :: BuiltIn -> Type Symbol
@@ -78,10 +83,10 @@ builtInType BIfloat  = [a, tInt] ~~> [a, tFloat]
 builtInType BIord    = [a, tChar] ~~> [a, tInt]
 builtInType BIchar   = [a, tInt] ~~> [a, tChar]
  -- IO builtins
-builtInType BIgetchar   = [a] ~~> [a, tMaybe tChar]
-builtInType BIputchar   = [a, tChar] ~~> [a]
---builtInType BIreadfile  = [a, tString] ~~> [a, tMaybe tString]
---builtInType BIwritefile = [a, tString, tString] ~~> [a, tBool]
+builtInType BIgetchar   = [a] ~-> [a, tMaybe tChar]
+builtInType BIputchar   = [a, tChar] ~-> [a]
+--builtInType BIreadfile  = [a, tString] ~-> [a, tMaybe tString]
+--builtInType BIwritefile = [a, tString, tString] ~-> [a, tBool]
 -- Compiler funcs
 builtInType BIdef     = [a, fun e [b] [c], tString] ~+> [a]
 --builtInType BIlet     = [a, fun e [b] [c], tString] ~+> [c]
