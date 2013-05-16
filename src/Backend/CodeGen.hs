@@ -205,13 +205,13 @@ gepFst ty nme var = gep ty nme var [0, 0 :: Int]
 -- | get a pointer to the second member of a pair
 gepSnd ty nme var = gep ty nme var [0, 1 :: Int]
 -- | load a value from the memory
-load ty nme ptr = instr ty nme "load #" [ptr]
+load ty nme ptr = instr ty nme "load #" [ptr :: LLVar]
 -- | store a value to the memory
-store val ptr = appendTmpl "store #, #" [val, ptr]
+store val ptr = appendTmpl "store #, #" [val, ptr :: LLVar]
 -- | function call
 callRaw ty name fname args = instr ty name "call # #(#)" [llTypeDoc ty, P.text fname, llVarsDoc args]
 -- | return
-ret val = appendTmpl "ret #" [val]
+ret val = appendTmpl "ret #" [val :: LLVar]
 -- | LLVM SSA phi node
 phi ty name entries = instr ty name "phi # #" [llTypeDoc ty, inbbs]
   where inbbs = P.sep $ P.punctuate P.comma [ P.brackets $ P.text v <> P.comma <+> P.char '%' <> P.text l | (LLVar _ v, l) <- entries]
