@@ -33,7 +33,7 @@ z ~+> y = fun (TyPhase TyCompile) z y
 -- | Parse-time function helper
 z ~*> y = fun (TyPhase TyParse) z y
 -- | Run-time function helper
-z ~-> y = fun (TyPhase TyParse) z y
+z ~-> y = fun (TyPhase TyRun) z y
 -- | Unary function type
 unary t = [a, t] ~~> [a, t]
 -- | Binary function type
