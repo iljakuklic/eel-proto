@@ -1,3 +1,7 @@
+{-
+    EEL -- Extensible Experimental Language
+    by Lukáš Kuklínek, 2013
+-}
 
 module Parser.Parser(runEel, runEelExt, initState, initStack, emitModule, semaCheck) where
 

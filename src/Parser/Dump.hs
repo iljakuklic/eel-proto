@@ -1,3 +1,7 @@
+{-
+    EEL -- Extensible Experimental Language
+    by Lukáš Kuklínek, 2013
+-}
 
 module Parser.Dump(dumpTerm, dumpMeta, printStack, printFuncs, TracedError(..), ErrorSet(..)) where
 

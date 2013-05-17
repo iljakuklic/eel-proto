@@ -1,3 +1,7 @@
+{-
+    EEL -- Extensible Experimental Language
+    by Lukáš Kuklínek, 2013
+-}
 
 module Main.CommandLine(CommandLineError, parseCommandLine, writeHelp) where
 
