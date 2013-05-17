@@ -4,6 +4,7 @@ module Backend.CodeGen(
         -- * Code generation functions
         fill, codegen,
         -- * LLVM types
+        -- | Convenient type constants and smart constructors.
         LLType(..), llTypeDoc, llInt, llIntNative, llRaw, llPair, llSum, llFloat, llChar, llNamed, llStruct, llPtr, llSize, llBool, llFunc,
         -- * Platform specifics
         ptrBytes, ptrBits, sizeBits, intBits, charBits,
@@ -14,10 +15,12 @@ module Backend.CodeGen(
         -- * Stack manipulation
         getStack, setStack,
         -- * Genral code emission
+        -- | manipulating the output buffer
         getCode, mapCode, addAnon, getAnons, appendRaw, append, appendTmpl, blankLine,
         -- * LLVM constructs
         label, instr, comment, braceBlock, funcHeader, funcPrototype,
         -- * LLVM instructions
+        -- | Shortcuts to generate the most common LLVM instructions
         phi, branch, branchCond, gep, gepFst, gepSnd, load, store, bitcast, callRaw, ret
     ) where
 

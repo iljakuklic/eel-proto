@@ -49,11 +49,11 @@ data BuiltIn
      -- IO builtins
      | BIgetchar       -- ^ read a character from stdin
      | BIputchar       -- ^ write a character to stdout
-     -- | BIreadfile      -- ^ read file contents
-     -- | BIwritefile     -- ^ write file contents
+     {- | BIreadfile      -- ^ read file contents
+     -- | BIwritefile     -- ^ write file contents -}
      -- Compiler functions
      | BIdef           -- ^ define a function
-     -- | BIlet           -- ^ let binding
+     {- | BIlet           -- ^ let binding -}
      | BIpromote       -- ^ lookup a function from a string
      -- Parser functions
      | BIdefrule       -- ^ define grammar rule
