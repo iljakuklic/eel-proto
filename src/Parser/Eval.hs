@@ -44,5 +44,11 @@ addFunc name term = do
     let st = pSymTable ste
     case (M.lookup name st) of
         Just _ -> fail ("Symbol already defined: '" ++ show name ++ "'")
-        Nothing -> setState (ste { pSymTable = M.insert name term st })
+        Nothing -> if isValidSymbol name
+            then setState (ste { pSymTable = M.insert name term st })
+            else fail ("Invalid symbol string: " ++ show (show name))
+  where
+    isValidSymbol (Symbol nme) = length nme > 0 && isValidHead (head nme) && all isValidTail (tail nme)
+    isValidHead h = h `elem` ("._" ++ ['a'..'z'] ++ ['A'..'Z'])
+    isValidTail t = isValidHead t || (t `elem` ['0'..'9'])
 
