@@ -247,3 +247,5 @@
 [ digits dup isnil [ 0 swap cons ] ifthen [ 48 add char ] lmap ] "nat2str" def
 [ [ [ digit2int ] dip [ 10 mul add ] mayzip ] 0 just fold ] "str2nat" def
 
+# I/O
+[ [ putchar unit ] lmap zap ] "putstr" def
