@@ -159,7 +159,7 @@ emitBI BIputchar = do
     _ <- callRaw llIntNative "dummy" "@fputc" [c, stdout]
     return ()
 -- catch
-emitBI bi = error $ "Builtin not implemented: " ++ (drop 2 $ show bi)
+emitBI _ = return ()
 
 arith ty iname = do y <- pop ty "y"; x <- pop ty "x"; instr ty "r" (iname ++ " #, " ++ llVarName y) [x] >>= push
 ffunc fname = do x <- pop llFloat "fx"; callRaw llFloat "fy" ("@llvm." ++ fname ++ ".f" ++ show ptrBits) [x] >>= push

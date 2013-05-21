@@ -15,7 +15,7 @@ import Builtins.Table
 
 import Data.Char
 import qualified Data.Map as M
-import Text.Parsec(try, anyChar, modifyState, Stream, Parsec)
+import Text.Parsec(try, anyChar, modifyState, Stream, Parsec, oneOf)
 import Data.Functor.Identity
 
 -- empty metadata helper
@@ -123,6 +123,12 @@ instance Evaluable BuiltIn where
             case result of
                 TSumA _ _ -> return ()
                 _ -> fail ("Unexpected character " ++ show ch)
+
+    -- primitive parser for a character from a set
+    eval BIpponeof = pop >>= termToString >>= oneOf >>= push . TChar mEps
+
+    -- primitive parser for a character from a set
+    eval BIppnotof = pop >>= termToString >>= noneOf >>= push . TChar mEps
 
     -- failing primitive parser
     eval BIppfail = pop >>= termToString >>= fail . ("User error: " ++)

@@ -6,10 +6,11 @@
 [ swap [ swap ] [ nil 0 ] unlist [ swap cons ] dip2 ] "bfl" def
 [ [ swap ] dip bfl [ swap ] dip ] "bfr" def
 [ [ eqzero not ] while ] "bfloop" def
-[ nil [ swap cons ] nil nil 0 ] "bftape" def
-[ dup [ bury [ swap keep ] dip2 ] dip ] "bfwr" def
+[ nil nil 0 ] "bftape" def
+[ dup char putchar ] "bfwr" def
+[ zap getchar [ ord ] [ 0 ] maybe ] "bfrd" def
 
-[ "bfprog" invoke ] ".bf" 0 defrule
+[ [ bftape ] "bfprog" invoke cat [ zap2 zap2 0 ] cat "main" def ] ".bf" 0 defrule
 
 [ "bf" invoke ] "bfprog" 0 defrule
 
@@ -25,4 +26,5 @@
 [ 60 ascii [ bfl ] ] "bfi" 1 defrule
 [ 62 ascii [ bfr ] ] "bfi" 1 defrule
 [ 46 ascii [ bfwr ] ] "bfi" 1 defrule
+[ 44 ascii [ bfrd ] ] "bfi" 1 defrule
 [ 91 ascii "bf" invoke qot [ bfloop ] cat 93 ascii ] "bfi" 1 defrule

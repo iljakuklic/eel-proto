@@ -30,11 +30,11 @@ pterm = ploc (TComp e <$> pfunc <*> pterm
 pfunc = ploc (TInt e . read <$> ptok (many1 digit)
      <|> pfuncall
      <|> TQuot e <$> psbet "[" "]" pterm
-     <|> psbet "\"" "\"" pstr)
+     <|> pstr)
 -- function call parser
 pfuncall = do sym <- ptok psymb; term <- lookupFunc sym; return (TFunc e sym term)
 -- core string parser
-pstr  = ploc (TList e <$> many pchr)
+pstr  = ptok (between (char '"') (char '"') $ ploc (TList e <$> many pchr))
 -- char parser
 pchr  = TChar e <$> (satisfy (\ch -> isPrint ch && ch `notElem` "\"\\") <|> escSeq)
 escSeq = char '\\' *> decodeEsc

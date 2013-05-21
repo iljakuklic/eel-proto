@@ -45,6 +45,7 @@ data TypeInfo = NoType                         -- ^ type has not been assigned y
 -- | Source file position info
 data PosInfo = NoPos  -- ^ position is not known or has none
              | HasPos FilePath (Int, Int) (Int, Int) -- ^ position file and begin/eng coordinates
+             deriving Eq
 
 -- | Merge two (overlapping) positions into one
 mergePos NoPos x = x

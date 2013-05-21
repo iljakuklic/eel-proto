@@ -8,6 +8,7 @@ module Parser.Dump(dumpTerm, dumpMeta, printStack, printFuncs, TracedError(..), 
 import Parser.State
 import Sema.Term
 import Builtins.Types
+import Data.List(nub)
 
 import qualified Text.PrettyPrint.HughesPJ as P
 import Text.PrettyPrint.HughesPJ((<>), (<+>), ($+$), ($$))
@@ -25,7 +26,7 @@ instance Show e => Show (TracedError e) where
           doc  =  P.text (show err)
               $+$ P.nest 4 (P.text "in function") <+> P.text (show sym)
               $+$ P.nest 4 posDoc
-          posDoc = P.sep [ P.text "in" <+> pos2doc p | p@(HasPos _ _ _) <- poss ]
+          posDoc = P.sep $ take 5 [ P.text "in" <+> pos2doc p | p@(HasPos _ _ _) <- nub poss ]
 
 instance Show e => Show (ErrorSet e) where
     show (ErrorSet es) = show $ P.sep [ P.text (show e) $+$ P.text "" | e <- es ]

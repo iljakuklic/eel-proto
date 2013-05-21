@@ -101,6 +101,7 @@ builtInType BIinvoke  = [a, tString] ~*> [b]
 -- Primitive parsers
 builtInType BIppchar = [a, [a, tChar] ~+> [b, tBool]] ~*> [b]
 builtInType BIppfail = [a, tString] ~*> [b]
-builtInType BIpponeof = [a, tString] ~*> [a]
+builtInType BIpponeof = [a, tString] ~*> [a, tChar]
+builtInType BIppnotof = [a, tString] ~*> [a, tChar]
 builtInType BIppcoreskip = [a] ~*> [a]
 builtInType BIppcoreterm = [a] ~*> [b]
