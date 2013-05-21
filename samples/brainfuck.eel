@@ -20,11 +20,13 @@
 [ "bfi" invoke "bf" invoke cat ] "bf" 1 defrule
 
 
-[ [ ord 93 cmp ne ] ppchar [] ] "bfi" 1 defrule
-[ 43 ascii [ inc ] ] "bfi" 1 defrule
-[ 45 ascii [ dec ] ] "bfi" 1 defrule
-[ 60 ascii [ bfl ] ] "bfi" 1 defrule
-[ 62 ascii [ bfr ] ] "bfi" 1 defrule
-[ 46 ascii [ bfwr ] ] "bfi" 1 defrule
-[ 44 ascii [ bfrd ] ] "bfi" 1 defrule
-[ 91 ascii "bf" invoke qot [ bfloop ] cat 93 ascii ] "bfi" 1 defrule
+[ pponeof zap ] "oneof_" def
+
+[ "]" ppnotof zap [] ] "bfi" 1 defrule
+[ "+" oneof_ [ inc ] ] "bfi" 1 defrule
+[ "-" oneof_ [ dec ] ] "bfi" 1 defrule
+[ "<" oneof_ [ bfl ] ] "bfi" 1 defrule
+[ ">" oneof_ [ bfr ] ] "bfi" 1 defrule
+[ "." oneof_ [ bfwr ] ] "bfi" 1 defrule
+[ "," oneof_ [ bfrd ] ] "bfi" 1 defrule
+[ "[" oneof_ "bf" invoke "]" oneof_ qot [ bfloop ] cat ] "bfi" 1 defrule
