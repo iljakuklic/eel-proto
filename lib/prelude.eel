@@ -1,249 +1,249 @@
 
-// COMBINATORS and STACK MANIPULATORS
+# COMBINATORS and STACK MANIPULATORS
 
-// swap two top positions
-[ qot dip ] 'swap' def
-// swap 2nd and 3rd items on the stack
-[ [ swap ] dip ] 'swapd' def
-// duplicate 2 items
-[ [ dup ] dip dup [ swap ] dip ] 'dup2' def
-// duplicate 2nd item
-[ [ dup ] dip swap ] 'dup2nd' def
-// bury top item deep
-[ swap swapd ] 'bury' def
-[ swap [ bury ] dip ] 'bury3' def
-// dig item to the top
-[ swapd swap ] 'dig' def
-[ [ dig ] dip swap ] 'dig3' def
-// drop 2 top elements
-[ zap zap ] 'zap2' def
-// apply a function to the stack
-[ unit swap dip zap ] 'i' def
-// alias for i
-[ i ] 'apply' def
-// like apply, but keeps the function
-[ dup [ i ] dip ] 'keep' def
-// dip keeping 2 elements
-[ swap [ dip ] dip ] 'dip2' def
-// backward composition
-[ swap cat ] 'tac' def
-// zap in quotation
-[ [ zap ] tac ] 'zapq' def
-// partial application
-[ [ qot ] dip cat ] 'papply' def
-// swap top two arguments of a quotation
-[ [ swap ] tac ] 'flip' def
-// apply a function to two arguments
-[ dig [ keep ] dip swap dig [ i ] dip swap ] 'bi' def
+# swap two top positions
+[ qot dip ] "swap" def
+# swap 2nd and 3rd items on the stack
+[ [ swap ] dip ] "swapd" def
+# duplicate 2 items
+[ [ dup ] dip dup [ swap ] dip ] "dup2" def
+# duplicate 2nd item
+[ [ dup ] dip swap ] "dup2nd" def
+# bury top item deep
+[ swap swapd ] "bury" def
+[ swap [ bury ] dip ] "bury3" def
+# dig item to the top
+[ swapd swap ] "dig" def
+[ [ dig ] dip swap ] "dig3" def
+# drop 2 top elements
+[ zap zap ] "zap2" def
+# apply a function to the stack
+[ unit swap dip zap ] "i" def
+# alias for i
+[ i ] "apply" def
+# like apply, but keeps the function
+[ dup [ i ] dip ] "keep" def
+# dip keeping 2 elements
+[ swap [ dip ] dip ] "dip2" def
+# backward composition
+[ swap cat ] "tac" def
+# zap in quotation
+[ [ zap ] tac ] "zapq" def
+# partial application
+[ [ qot ] dip cat ] "papply" def
+# swap top two arguments of a quotation
+[ [ swap ] tac ] "flip" def
+# apply a function to two arguments
+[ dig [ keep ] dip swap dig [ i ] dip swap ] "bi" def
 
-// UTILITIES
+# UTILITIES
 
-// poor-mans type cast
-[ id2 zap ] 'typeas' def
+# poor-mans type cast
+[ id2 zap ] "typeas" def
 
-// UNIT TYPE
+# UNIT TYPE
 
-// remove unit
-[ unit typeas zap ] 'ununit' def
-// remove unit in a quotation
-[ [ ununit ] tac ] 'ununitq' def
+# remove unit
+[ unit typeas zap ] "ununit" def
+# remove unit in a quotation
+[ [ ununit ] tac ] "ununitq" def
 
-// SUM TYPE
+# SUM TYPE
 
-// swap A and B cases in a tagged union
-[ [ inb ] [ ina ] sel ] 'abswap' def
-// provide a default value
-[ qot zapq [] swap sel ] 'default' def
-// map over A case
-[ [ ina ] cat [ inb ] sel ] 'smap' def
-// monadic join over sums ((A+B)+B) -> (A+B)
-[ [] [ inb ] sel ] 'sjoin' def
-// monadic composition of sums (X+B) (X->(Y+B)) -> (Y+B)
-[ smap sjoin ] 'sbind' def
+# swap A and B cases in a tagged union
+[ [ inb ] [ ina ] sel ] "abswap" def
+# provide a default value
+[ qot zapq [] swap sel ] "default" def
+# map over A case
+[ [ ina ] cat [ inb ] sel ] "smap" def
+# monadic join over sums ((A+B)+B) -> (A+B)
+[ [] [ inb ] sel ] "sjoin" def
+# monadic composition of sums (X+B) (X->(Y+B)) -> (Y+B)
+[ smap sjoin ] "sbind" def
 
-// MAYBE
+# MAYBE
 
-// nothing constructor
-[ unit inb ] 'nothing' def
-// just constructor
-[ ina nothing typeas ] 'just' def
-// maybe deconstructor
-[ ununitq sel ] 'maybe' def
-// make none or both of two maybes present
-[ [ swap [ swap pair just ] [ zap nothing ] maybe ] [ zap nothing ] maybe ] 'both' def
-// zip with a function
-[ [ both ] dip [ unpair ] tac smap ] 'mayzip' def
+# nothing constructor
+[ unit inb ] "nothing" def
+# just constructor
+[ ina nothing typeas ] "just" def
+# maybe deconstructor
+[ ununitq sel ] "maybe" def
+# make none or both of two maybes present
+[ [ swap [ swap pair just ] [ zap nothing ] maybe ] [ zap nothing ] maybe ] "both" def
+# zip with a function
+[ [ both ] dip [ unpair ] tac smap ] "mayzip" def
 
-// BOOLEANS
+# BOOLEANS
 
-// true constant
-[ unit just ] 'true' def
-// false constant
-[ nothing true typeas ] 'false' def
-// if-then-else
-[ [ ununitq ] dip maybe ] 'ifelse' def
-// if-then
-[ [] ifelse ] 'ifthen' def
-// sum type to bool
-[ [ zap true ] [ zap false ] sel ] 'sbool' def
-// negation
-[ [ false ] [ true ] ifelse ] 'not' def
-// logical multiplication
-[ not [ zap false ] ifthen ] 'and' def
-// logical addition
-[ [ zap true ] ifthen ] 'or' def
-// check a condition, return just (if satisfied) or nothing (if not)
-[ [ dup ] dip dip swap [ just ] [ zap nothing ] ifelse ] 'ccheck' def
+# true constant
+[ unit just ] "true" def
+# false constant
+[ nothing true typeas ] "false" def
+# if-then-else
+[ [ ununitq ] dip maybe ] "ifelse" def
+# if-then
+[ [] ifelse ] "ifthen" def
+# sum type to bool
+[ [ zap true ] [ zap false ] sel ] "sbool" def
+# negation
+[ [ false ] [ true ] ifelse ] "not" def
+# logical multiplication
+[ not [ zap false ] ifthen ] "and" def
+# logical addition
+[ [ zap true ] ifthen ] "or" def
+# check a condition, return just (if satisfied) or nothing (if not)
+[ [ dup ] dip dip swap [ just ] [ zap nothing ] ifelse ] "ccheck" def
 
-// LOOP-LIKE COMBINATORS (FIXED POINTS)
+# LOOP-LIKE COMBINATORS (FIXED POINTS)
 
-// infinite loop (unifies with anything, computation diverges)
-[ [ i ] fix ] 'undefined' def
-// while loop
-[ [ [ swap [ keep ] dip swap ] dip dig3 [ [ keep ] dip2 i ] [ zap zap2 ] ifelse ] fix ] 'while' def
+# infinite loop (unifies with anything, computation diverges)
+[ [ i ] fix ] "undefined" def
+# while loop
+[ [ [ swap [ keep ] dip swap ] dip dig3 [ [ keep ] dip2 i ] [ zap zap2 ] ifelse ] fix ] "while" def
 
-// ORDERING
+# ORDERING
 
-// A B [A<B case] [A=B case] [A>B case] uncmp
-[ swap [ qot [ qot ] dip cat [ ifelse ] cat ] dip maybe ] 'uncmp' def
-// compare keeping the operands on the stack
-[ dup2 cmp ] 'cmpk' def
-[ dup2 fcmp ] 'fcmpk' def
-// comparisons
-[ [ true  ] [ false ] [ false ] uncmp ] 'lt' def
-[ [ false ] [ true  ] [ false ] uncmp ] 'eq' def
-[ [ false ] [ false ] [ true  ] uncmp ] 'gt' def
-[ [ false ] [ true  ] [ true  ] uncmp ] 'ge' def
-[ [ true  ] [ true  ] [ false ] uncmp ] 'le' def
-[ [ true  ] [ false ] [ true  ] uncmp ] 'ne' def
+# A B [A<B case] [A=B case] [A>B case] uncmp
+[ swap [ qot [ qot ] dip cat [ ifelse ] cat ] dip maybe ] "uncmp" def
+# compare keeping the operands on the stack
+[ dup2 cmp ] "cmpk" def
+[ dup2 fcmp ] "fcmpk" def
+# comparisons
+[ [ true  ] [ false ] [ false ] uncmp ] "lt" def
+[ [ false ] [ true  ] [ false ] uncmp ] "eq" def
+[ [ false ] [ false ] [ true  ] uncmp ] "gt" def
+[ [ false ] [ true  ] [ true  ] uncmp ] "ge" def
+[ [ true  ] [ true  ] [ false ] uncmp ] "le" def
+[ [ true  ] [ false ] [ true  ] uncmp ] "ne" def
 
-// PRODUCT
-[ unpair zap ] 'geta' def
-[ unpair [ zap ] dip ] 'getb' def
-[ unpair swap pair ] 'pswap' def
-[ [ unpair ] dip dip pair ] 'pmap' def
-// row-like products
-[ unit pair ] 'pnil' def
-[ geta     ] 'at0' def
-[ getb at0 ] 'at1' def
-[ getb at1 ] 'at2' def
-[ getb at2 ] 'at3' def
-[ getb at3 ] 'at4' def
+# PRODUCT
+[ unpair zap ] "geta" def
+[ unpair [ zap ] dip ] "getb" def
+[ unpair swap pair ] "pswap" def
+[ [ unpair ] dip dip pair ] "pmap" def
+# row-like products
+[ unit pair ] "pnil" def
+[ geta     ] "at0" def
+[ getb at0 ] "at1" def
+[ getb at1 ] "at2" def
+[ getb at2 ] "at3" def
+[ getb at3 ] "at4" def
 
-// LISTS
+# LISTS
 
-// nil constructor
-[ unit inb listw ] 'nil' def
-// cons constructor
-[ pair ina listw ] 'cons' def
-// deconstructor
-[ [ [ listu ] dip [ unpair ] tac ] dip maybe ] 'unlist' def
-// singleton list constructor
-[ nil cons ] 'lunit' def
-// nil test
-[ listu sbool not ] 'isnil' def
-// head, tail
-[ listu [ geta ] smap ] 'head' def
-[ listu [ getb ] smap ] 'tail' def
-// left-associative list catamorphism
-[ [ flip ] dip swap [ dig3 [ [ bury [ keep ] dip ] dip swap [ bury ] dip i ] [ zap2 ] unlist ] fix ] 'fold' def
-// list reversal
-[ [ cons ] nil fold ] 'reverse' def
-// right-associative list catamorphism
-[ [ reverse ] dip2 fold ] 'rfold' def
-// right-associative scan
-[ bury [ swap ] tac qot [ dip [ dup ] dip cons ] cat nil rfold [ zap ] dip ] 'rscan' def
-// list endofunctor
-[ qot [ dip cons ] cat nil fold reverse ] 'lmap' def
-// list concatenation
-[ [ cons ] swap rfold ] 'append' def
-[ swap append ] 'prepend' def
-[ [ append ] nil rfold ] 'concat' def
-[ qot [ qot [ prepend ] cat lmap cons ] cat [ nil ] unlist concat ] 'joinwith' def
-// list filtering
-[ qot [ [ dup ] dip ] tac [ dip2 dig [ cons ] [ [ zap ] dip ] ifelse ] cat nil rfold ] 'filter' def
-// list generator
-[ [ [ keep ] dip dig [ [ i ] dip swap cons ] [ zap2 nil ] maybe ] fix ] 'unfold' def
-// maybe type to list
-[ [ lunit ] [ nil ] maybe ] 'maybe2list' def
-// zip to pairs of values
+# nil constructor
+[ unit inb listw ] "nil" def
+# cons constructor
+[ pair ina listw ] "cons" def
+# deconstructor
+[ [ [ listu ] dip [ unpair ] tac ] dip maybe ] "unlist" def
+# singleton list constructor
+[ nil cons ] "lunit" def
+# nil test
+[ listu sbool not ] "isnil" def
+# head, tail
+[ listu [ geta ] smap ] "head" def
+[ listu [ getb ] smap ] "tail" def
+# left-associative list catamorphism
+[ [ flip ] dip swap [ dig3 [ [ bury [ keep ] dip ] dip swap [ bury ] dip i ] [ zap2 ] unlist ] fix ] "fold" def
+# list reversal
+[ [ cons ] nil fold ] "reverse" def
+# right-associative list catamorphism
+[ [ reverse ] dip2 fold ] "rfold" def
+# right-associative scan
+[ bury [ swap ] tac qot [ dip [ dup ] dip cons ] cat nil rfold [ zap ] dip ] "rscan" def
+# list endofunctor
+[ qot [ dip cons ] cat nil fold reverse ] "lmap" def
+# list concatenation
+[ [ cons ] swap rfold ] "append" def
+[ swap append ] "prepend" def
+[ [ append ] nil rfold ] "concat" def
+[ qot [ qot [ prepend ] cat lmap cons ] cat [ nil ] unlist concat ] "joinwith" def
+# list filtering
+[ qot [ [ dup ] dip ] tac [ dip2 dig [ cons ] [ [ zap ] dip ] ifelse ] cat nil rfold ] "filter" def
+# list generator
+[ [ [ keep ] dip dig [ [ i ] dip swap cons ] [ zap2 nil ] maybe ] fix ] "unfold" def
+# maybe type to list
+[ [ lunit ] [ nil ] maybe ] "maybe2list" def
+# zip to pairs of values
 [   [ nil ] dip2 
     [ [ unpair [ unpair ] dip unpair [ swap ] dip [ pair swap cons ] dip2 ] [undefined] maybe ]
     [ [ listu ] dip listu both dup sbool ]
-    while zap reverse ] 'zipp' def
-// zip lists using a function
-[ [ zipp ] dip [ unpair ] tac lmap ] 'zip' def
-// monadic list binding
-[ lmap concat ] 'lbind' def
+    while zap reverse ] "zipp" def
+# zip lists using a function
+[ [ zipp ] dip [ unpair ] tac lmap ] "zip" def
+# monadic list binding
+[ lmap concat ] "lbind" def
 
 
-// special folds
-[ [ add ] 0 fold ] 'sum' def
-[ [ mul ] 1 fold ] 'product' def
-[ [ swap zap 1 add ] 0 fold ] 'length' def
-[ lmap [ and ] true fold ] 'all' def
-[ lmap [ or ] false fold ] 'any' def
+# special folds
+[ [ add ] 0 fold ] "sum" def
+[ [ mul ] 1 fold ] "product" def
+[ [ swap zap 1 add ] 0 fold ] "length" def
+[ lmap [ and ] true fold ] "all" def
+[ lmap [ or ] false fold ] "any" def
 
-// INTEGERS
+# INTEGERS
 
-// increment, decrement, negate, modulo
-[ 1 add ] 'inc' def
-[ 1 sub ] 'dec' def
-[ 0 swap sub ] 'neg' def
-[ dup2 div dup [ mul sub ] dip swap ] 'divmod' def
-[ divmod swap zap ] 'mod' def
-// comparisons keeping the original
-[ [ dup ] dip cmp ] 'cmpto' def
-[ 0 cmpto eq ] 'eqzero' def
-// absolute value, signum
-[ 0 cmpto le [ neg ] ifthen ] 'abs' def
-[ 0 cmp [ 1 neg ] [ 0 ] [ 1 ] uncmp ] 'sgn' def
-// integer is in range lo <= x <= hi
-[ [ dup ] dip2 [ swap ] dip cmp le [ cmp ge ] dip and ] 'inrange' def
-// list of digits in base 10
-[ [ eqzero [ 10 divmod ] dip [ zap nothing ] [ just ] ifelse ] unfold [ zap ] dip reverse ] 'digits' def
+# increment, decrement, negate, modulo
+[ 1 add ] "inc" def
+[ 1 sub ] "dec" def
+[ 0 swap sub ] "neg" def
+[ dup2 div dup [ mul sub ] dip swap ] "divmod" def
+[ divmod swap zap ] "mod" def
+# comparisons keeping the original
+[ [ dup ] dip cmp ] "cmpto" def
+[ 0 cmpto eq ] "eqzero" def
+# absolute value, signum
+[ 0 cmpto le [ neg ] ifthen ] "abs" def
+[ 0 cmp [ 1 neg ] [ 0 ] [ 1 ] uncmp ] "sgn" def
+# integer is in range lo <= x <= hi
+[ [ dup ] dip2 [ swap ] dip cmp le [ cmp ge ] dip and ] "inrange" def
+# list of digits in base 10
+[ [ eqzero [ 10 divmod ] dip [ zap nothing ] [ just ] ifelse ] unfold [ zap ] dip reverse ] "digits" def
 
-// COUNTED FUNCTIONS
+# COUNTED FUNCTIONS
 
-// generate list range
-[ [ cmpk le [ dup2nd just [ inc ] dip2 ] [ nothing ] ifelse ] unfold [ zap2 ] dip ] 'range' def
-// extract n-th element
-[ reverse [ zap eqzero [ dec ] dip ] filter head [ zap ] dip ] 'nth' def
-// apply a function given number of times
-[ qot [ dip dec ] cat [ 0 cmpto gt ] while zap ] 'repeat' def
-// integer power function
-[ [ 1 ] dip2 swap qot [ mul ] cat repeat ] 'pow' def
-// accumulate results of repeatedly applied function
-[ [ nil ] dip2 [ dip ] papply [ [ dup ] dip cons ] tac repeat cons reverse ] 'accum' def
-// replicate given value a number of times
-[ [ ] accum tail nil default ] 'replicate' def
+# generate list range
+[ [ cmpk le [ dup2nd just [ inc ] dip2 ] [ nothing ] ifelse ] unfold [ zap2 ] dip ] "range" def
+# extract n-th element
+[ reverse [ zap eqzero [ dec ] dip ] filter head [ zap ] dip ] "nth" def
+# apply a function given number of times
+[ qot [ dip dec ] cat [ 0 cmpto gt ] while zap ] "repeat" def
+# integer power function
+[ [ 1 ] dip2 swap qot [ mul ] cat repeat ] "pow" def
+# accumulate results of repeatedly applied function
+[ [ nil ] dip2 [ dip ] papply [ [ dup ] dip cons ] tac repeat cons reverse ] "accum" def
+# replicate given value a number of times
+[ [ ] accum tail nil default ] "replicate" def
 
-// CHARACTERS
-[ ord 48 57 inrange ] 'isdigit' def
-[ [ isdigit ] ccheck [ ord 48 sub ] smap ] 'digit2int' def
+# CHARACTERS
+[ ord 48 57 inrange ] "isdigit" def
+[ [ isdigit ] ccheck [ ord 48 sub ] smap ] "digit2int" def
 
-// FLOATS
+# FLOATS
 
-// pi (the ratio of circle diameter and circumflence)
-[ 5419351 float 1725033 float fdiv ] 'fpi' def
-// floating point negation
-[ 0 float swap fsub ] 'fneg' def
-// reciprocal element
-[ 1 float swap fdiv ] 'frecip' def
-// floating point exp function
-[ 9864101 float 3628800 float fdiv swap fpow ] 'fexp' def
-// square root
-[ 1 float 2 float fdiv fpow ] 'fsqrt' def
-// logarithm given a base
-[ swap [ flog ] bi fdiv ] 'flogb' def
-// absolute value
-[ dup 0 float fcmp le [ fneg ] ifthen ] 'fabs' def
-// approximate equality w.r.t. given epsilon
-[ [ fsub fabs ] dip fcmp le ] 'feq' def
+# pi (the ratio of circle diameter and circumflence)
+[ 5419351 float 1725033 float fdiv ] "fpi" def
+# floating point negation
+[ 0 float swap fsub ] "fneg" def
+# reciprocal element
+[ 1 float swap fdiv ] "frecip" def
+# floating point exp function
+[ 9864101 float 3628800 float fdiv swap fpow ] "fexp" def
+# square root
+[ 1 float 2 float fdiv fpow ] "fsqrt" def
+# logarithm given a base
+[ swap [ flog ] bi fdiv ] "flogb" def
+# absolute value
+[ dup 0 float fcmp le [ fneg ] ifthen ] "fabs" def
+# approximate equality w.r.t. given epsilon
+[ [ fsub fabs ] dip fcmp le ] "feq" def
 
-// STRING FUNCTIONS
+# STRING FUNCTIONS
 
-// natural to string and vice versa
-[ digits dup isnil [ 0 swap cons ] ifthen [ 48 add char ] lmap ] 'nat2str' def
-[ [ [ digit2int ] dip [ 10 mul add ] mayzip ] 0 just fold ] 'str2nat' def
+# natural to string and vice versa
+[ digits dup isnil [ 0 swap cons ] ifthen [ 48 add char ] lmap ] "nat2str" def
+[ [ [ digit2int ] dip [ 10 mul add ] mayzip ] 0 just fold ] "str2nat" def
 

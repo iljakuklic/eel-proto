@@ -15,7 +15,6 @@ import Data.Char
 import Text.Parsec hiding (many, (<|>))
 import Control.Applicative
 
--- empty metadata abbr
 e = mEps
 
 -- token
@@ -31,21 +30,23 @@ pterm = ploc (TComp e <$> pfunc <*> pterm
 pfunc = ploc (TInt e . read <$> ptok (many1 digit)
      <|> pfuncall
      <|> TQuot e <$> psbet "[" "]" pterm
-     <|> psbet "'" "'" pstr)
+     <|> psbet "\"" "\"" pstr)
 -- function call parser
 pfuncall = do sym <- ptok psymb; term <- lookupFunc sym; return (TFunc e sym term)
 -- core string parser
 pstr  = ploc (TList e <$> many pchr)
 -- char parser
-pchr  = TChar e <$> satisfy (\ch -> isPrint ch && ch /= '\'')  -- TODO escape seqs
+pchr  = TChar e <$> (satisfy (\ch -> isPrint ch && ch `notElem` "\"\\") <|> escSeq)
+escSeq = char '\\' *> decodeEsc
+decodeEsc = choice [ c <$ char d | (c, d) <- [('\t', 't'), ('\n', 'n'), ('\r', 'r')] ] <|> (chr . read) <$> many1 digit
 -- symbol parser
-psymb = Symbol <$> many1 (satisfy (\c -> isAlpha c || c `elem` "0123456789_"))
+psymb = Symbol <$> many1 (satisfy (\c -> isAlphaNum c || c == '_'))
 -- term evaluating parser
 peval = () <$ many (pfunc >>= eval)
 -- top-level parser (skips whitespace at the begining, expects end of input after parse)
 ptop  = skip >> peval >> eof >> getState
 -- skipping parser (consumes whitespace and comments)
-skip  = many ((space >> return ()) <|> (try (string "//") >> (anyChar `manyTill` eol) >> return ())) >> return ()
+skip  = many ((space >> return ()) <|> (char '#' >> (anyChar `manyTill` eol) >> return ())) >> return ()
 -- end of line or end of input
 eol   = (char '\n' >> return ()) <|> eof
 -- decorate the parser result with source location annotation

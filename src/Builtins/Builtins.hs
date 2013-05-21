@@ -65,6 +65,7 @@ data BuiltIn
      -- Primitive parsers
      | BIppchar        -- ^ read a char (within a ASCII range) from the source
      | BIppfail        -- ^ fail with a message
+     | BIpponeof       -- ^ match one fo characters specified
      | BIppcoreskip    -- ^ whitespace / comment skipper from the core
      | BIppcoreterm    -- ^ core term parser
      deriving (Show, Bounded, Enum, Eq)
