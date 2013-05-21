@@ -38,7 +38,8 @@ pstr  = ptok (between (char '"') (char '"') $ ploc (TList e <$> many pchr))
 -- char parser
 pchr  = TChar e <$> (satisfy (\ch -> isPrint ch && ch `notElem` "\"\\") <|> escSeq)
 escSeq = char '\\' *> decodeEsc
-decodeEsc = choice [ c <$ char d | (c, d) <- [('\t', 't'), ('\n', 'n'), ('\r', 'r')] ] <|> (chr . read) <$> many1 digit
+decodeEsc = choice [ c <$ char d | (c, d) <- escapes ] <|> (chr . read) <$> many1 digit
+    where escapes = [('\t', 't'), ('\n', 'n'), ('\r', 'r'), ('\\', '\\'), ('"', '"'), ('\'', '\'')]
 -- symbol parser
 psymb = Symbol <$> many1 (satisfy (\c -> isAlphaNum c || c == '_'))
 -- term evaluating parser

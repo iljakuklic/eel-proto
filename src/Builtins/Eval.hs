@@ -15,7 +15,7 @@ import Builtins.Table
 
 import Data.Char
 import qualified Data.Map as M
-import Text.Parsec(try, anyChar, modifyState, Stream, Parsec, oneOf)
+import Text.Parsec(try, anyChar, modifyState, Stream, Parsec, oneOf, noneOf)
 import Data.Functor.Identity
 
 -- empty metadata helper
