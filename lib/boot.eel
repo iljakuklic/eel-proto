@@ -1,0 +1,68 @@
+
+# shortcuts for invoking nonterminals
+[ "skip" invoke ] "_skip" def
+[ "skip1" invoke ] "_skip1" def
+[ "lineskip" invoke ] "_lineskip" def
+[ "symbol" invoke ] "_symbol" def
+[ "func" invoke ] "_func" def
+[ "int"  invoke ] "_int" def
+[ "string" invoke ] "_string" def
+[ "strchar" invoke ] "_strchar" def
+
+# helper parsers
+[ "0123456789" pponeof ord 48 sub ] "_digit" def
+[ pponeof zap ] "_oneof" def
+
+# whitespaces / comments
+[ " \t\n" _oneof ] "skip1" 0 defrule
+[ "#"  _oneof _lineskip ] "skip1" 0 defrule
+[ "\n" ppnotof zap _lineskip ] "lineskip" 0 defrule
+[ "\n" _oneof ] "lineskip" 0 defrule
+
+# whitespace / comment blocks (skip parser)
+[  ] "skip" 0 defrule
+[ _skip1 _skip ] "skip" 0 defrule
+
+# symbol allowed chars
+[ "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_" pponeof ] "symbolchar" 0 defrule
+[ "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789" pponeof ] "symbolchar1" 0 defrule
+
+# symbol character strings
+[ "symbolchar" invoke "symbol1" invoke cons ] "symbol" 0 defrule
+[ nil ] "symbol1" 0 defrule
+[ "symbolchar1" invoke "symbol1" invoke cons ] "symbol1" 0 defrule
+
+# composition of functions
+[ [] ] "comp" 0 defrule
+[ _func "comp" invoke cat ] "comp" 0 defrule
+
+# function
+[ "func1" invoke _skip ] "func" 0 defrule
+[ _symbol promote ] "func1" 0 defrule
+[ _int qot ] "func1" 0 defrule
+[ "quot" invoke ] "func1" 0 defrule
+[ _string qot ] "func1" 0 defrule
+# numbers
+[ "+" _oneof "natural" invoke ] "int" 0 defrule
+[ "-" _oneof "natural" invoke neg ] "int" 0 defrule
+[ "natural" invoke ] "int" 0 defrule
+[ _digit "natural1" invoke ] "natural" 0 defrule
+[ ] "natural1" 0 defrule
+[ 10 mul _digit add "natural1" invoke ] "natural1" 0 defrule
+# quotations
+[ "[" _oneof _skip "comp" invoke "]" _oneof qot ] "quot" 0 defrule
+# strings
+[ "\"" _oneof "stringraw" invoke "\"" _oneof ] "string" 0 defrule
+[ nil ] "stringraw" 0 defrule
+[ _strchar "stringraw" invoke cons ] "stringraw" 0 defrule
+[ "\n\t\\\"" ppnotof ] "strchar" 0 defrule
+# string escape sequneces
+[ "\\" _oneof "escseq" invoke ] "strchar" 0 defrule
+[ "n" _oneof 10 char ] "escseq" 0 defrule
+[ "\\" _oneof 92 char ] "escseq" 0 defrule
+[ "\"" _oneof 34 char ] "escseq" 0 defrule
+[ "\'" _oneof 29 char ] "escseq" 0 defrule
+
+
+# .eeel : eel core with extensible grammar
+[ _skip "comp" invoke i ] ".eeel" 0 defrule
