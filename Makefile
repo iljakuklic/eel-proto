@@ -40,9 +40,38 @@ wc:
 	wc samples/*.* lib/*.eel
 	wc src/*.hs src/*/*.hs
 
-demo:
+demodir:
 	mkdir -p demo
 
 
+# cellular autometa examples
+demos-cell: demo/cell-rule110 demo/cell-rule30 demo/cell-rider
+demo/cell-%: samples/%.ca
+	./eel -o $@ lib/boot.eel samples/cellular.eel $<
 
-.PHONY: prof clean top doc docs readdoc repl wc prof profrun
+# brainfuck examples
+demos-bf: demo/bf-hello demo/bf-factorial demo/bf-cat
+demo/bf-%: samples/%.bf
+	./eel -o $@ lib/boot.eel samples/brainfuck.eel $<
+
+# bootstrapped syntax example
+demo/eeel-demo: samples/test.eeel
+	./eel -o $@ lib/boot.eel $<
+
+# structured syntax example
+demo/seel-demo: samples/test.seel samples/seel.eel
+	./eel -o $@ lib/boot.eel samples/seel.eel samples/brainfuck.eel samples/test.seel
+
+# build all demos
+demos: eel demodir demo/eeel-demo demo/seel-demo demos-bf demos-cell
+
+run-rule110: demo/cell-rule110
+	$< 15 "|__________________@___@"
+
+run-factorial: demo/bf-factorial
+	$<
+
+run-hello: demo/bf-hello
+	$<
+
+.PHONY: prof clean top doc docs readdoc repl wc prof profrun demodir
