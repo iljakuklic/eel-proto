@@ -1,0 +1,53 @@
+
+# helpers
+[ "definition" invoke ] "_definition" def
+[ "production" invoke ] "_production" def
+
+# 'define' construct: function definition
+[
+    "define" _eelkey  # 'define' keyword
+    _symbol _skip     # function name
+    "{" _tok          # opening brace
+        _prog         # function body
+    "}" _tok          # closing brace
+    swap def          # define the function
+] "definition" 0 defrule
+
+# 'grammar' construct: introducing new rules
+[
+    "grammar" _eelkey # 'grammar' keyword
+    "{" _tok          # opening brace
+    "rules" invoke    # list of rules
+    "}" _tok          # closing brace
+] "definition" 0 defrule
+
+# list of rules
+[] "rules" 0 defrule
+[ "rule" invoke "rules" invoke ] "rules" 0 defrule
+
+# one rule
+[
+    _symbol _skip         # extended non-terminal
+    "-->" _eelkey         # right arrow
+    [ _production ] dip   # rule right-hand-side
+    0 defrule             # define the rule
+] "rule" 0 defrule
+
+# PRODUCTIONS:
+# epsilon rule (end of production string)
+[ ";" _eelkey [] ] "production" 0 defrule
+# literal keyword
+[ "^" _oneof _string _skip [ _keyword ] papply  _production cat ] "production" 0 defrule
+[ _string _skip [ _keyword _skip ] papply  _production cat ] "production" 0 defrule
+# nonterminal invocation
+[ _symbol _skip [ invoke   ] papply  _production cat ] "production" 0 defrule
+# semantic action
+[ "[" _tok _prog "]" _tok _production cat ] "production" 0 defrule
+
+# top-level stuff
+
+[] "definitions" 0 defrule
+[ _definition "definitions" invoke ] "definitions" 0 defrule
+
+[ _skip "definitions" invoke ] ".seel" 0 defrule
+

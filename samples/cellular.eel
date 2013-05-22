@@ -1,0 +1,84 @@
+
+
+
+# command line processing
+[
+    drophead
+    [
+        [ str2nat [] [0] maybe ] dip
+        [ zap swap pair just ] [ zap nothing ] unlist
+    ] [ nothing ] unlist
+] "cmdline" def
+
+
+[
+    swap cmdline
+        [ unpair dig repeat zap 0 ]
+        [ zap "Wrong commandline args" putstrln 1 ]
+    maybe
+] "camain" def
+
+[ [ ord ] bi cmp eq [ nil just ] [ nothing ] ifelse ] "match_char" def
+[ lunit just ] "match_push" def
+[ zap nil just ] "match_any" def
+
+[
+    ord 63 cmpto eq [
+        zap match_any
+    ] [
+        33 cmpto eq [ zap match_push ] [ char match_char ] ifelse
+    ] ifelse
+] "match1" def
+
+[ dup2 [ length ] dip length cmp eq ] "eqlen" def
+
+[ [ match1 ] zip travlist ] "matchn_" def
+[
+    dup [ matchn_ ] dip swap
+    [ eqlen [ swap zap just ] [ zap2 nothing ] ifelse ] [ zap nothing ] maybe
+    [ concat ] smap
+] "matchn" def
+
+[ [ swap [ swap append just ] papply sbind ] papply sbind ] "catmaybes" def
+
+[ swap
+    [ undefined ]
+    [ nil nothing ]
+    unlist
+] "match_next" def
+
+
+[
+    [ unpair ] dip unpair swapd
+    matchn [ matchn ] dip catmaybes
+] "match_both" def
+
+[ [dup] dip2 [match_both] dip swap [ [zap] dip2 swap i ina ] [ zap inb ] maybe ] "do_rule" def
+
+[ [ do_rule ] papply papply swap [ ina [zap] dip ] [ swap i ] sel ] "rulexec" def
+
+[ dup reverse [ [ unpair [cons] dip drophead pair ] nil ] dip pair rscan ] "allcontexts" def
+
+[ [] [ geta head 10 char default ] sel ] "getcell" def
+
+[ [ dup putstrln allcontexts [ inb ] lmap ] dip lmap [ getcell ] lmap ] "castep" def
+
+# GRAMMAR
+
+[ "_|<>0123456789+-*/?!@$%^&*.,;OXI~qwertyuiopasdfghjklmnbvcxz" pponeof ] "cachar" def
+[ "" ] "castr" 0 defrule
+[ cachar "castr" invoke cons ] "castr" 0 defrule
+[ "castr" invoke reverse "[" _oneof cachar "]" _oneof "castr" invoke cons swap pair qot ] "carule" 0 defrule
+
+[ ":" _oneof _skip cachar qot [ zap ] tac ] "caaction" 0 defrule
+
+[ "carule" invoke _skip "caaction" invoke qot cat [ rulexec ] cat _skip ] "caentry" 0 defrule
+
+[ [] ] "caprog" 0 defrule
+[ "caentry" invoke "caprog" invoke cat ] "caprog" 0 defrule
+
+[ "caprog" invoke [ castep ] papply [ camain ] papply "main" def ] "catop" 0 defrule
+
+[ _skip "catop" invoke ] ".ca" 0 defrule
+# [ _skip "catop" invoke ] ".ca" 0 defrule
+

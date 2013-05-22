@@ -1,0 +1,42 @@
+
+# hello
+
+define square {
+    dup mul
+}
+
+define vector_length {
+    [ square ] lmap sum
+}
+
+grammar {
+    # character literals support
+    atom --> ^"\'" strchar ^"\'" [ qot ] ;
+}
+
+grammar {
+    # list constants
+    atom      --> "$[" listcont "]" [ qot ] ;
+    listcont  --> [ nil ] ;                            # empty list
+    listcont  --> listentry listcont1 [ cons ] ;       # non-empty
+    listcont1 --> [ nil ] ;                            # end of list
+    listcont1 --> "," listentry listcont1 [ cons ] ;   # list continued
+    listentry --> func [ i ] ;
+}
+
+define main {
+    # get rid of cmdline arguments
+    zap
+
+    # write something
+    $['H', 'i', '!', '\n'] putstr
+
+    # sum user-defined nested list
+    $[$[1,3], $[2,7,5], $[22]] [sum] lmap sum
+    
+    # use brainfuck to compute the exit code
+    # the result is added to the sum of the nested list above
+    $bf[>+++++[<+++++>-]<]
+}
+
+

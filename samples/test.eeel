@@ -1,0 +1,16 @@
+
+# x^2
+[ dup mul ] "square" def
+
+# make ^2 an alias to the square function
+# This has to be a syntax extension as "^2" is not a valid EEL identifier
+[ "^2" _keyword [ square ] ] "atom" 0 defrule
+
+# compute the square of a number and display the result
+[ dup [ "The square of " putstr nat2str putstr ] dip " is " putstr ^2 nat2str putstrln ] "printsq" def
+
+[ dup str2nat [ printsq zap ] [ "Not a number: " putstr putstrln ] maybe ] "process" def
+
+[ tail nil default [ process unit ] lmap zap 0 ] "main" def
+
+
