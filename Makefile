@@ -26,6 +26,7 @@ repl: eel
 
 clean:
 	rm -f eel
+	rm -rf demo
 	cabal clean
 
 profrun: eel
@@ -38,5 +39,10 @@ prof:
 wc:
 	wc samples/*.* lib/*.eel
 	wc src/*.hs src/*/*.hs
+
+demo:
+	mkdir -p demo
+
+
 
 .PHONY: prof clean top doc docs readdoc repl wc prof profrun

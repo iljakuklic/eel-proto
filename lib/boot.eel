@@ -8,13 +8,14 @@
 [ "int"  invoke ] "_int" def
 [ "string" invoke ] "_string" def
 [ "strchar" invoke ] "_strchar" def
+[ "prog" invoke ] "_prog" def
 
-# helper parsers
-[ "0123456789" pponeof ord 48 sub ] "_digit" def
-[ pponeof zap ] "_oneof" def
+# helpers
+[ _keyword _skip ] "_eelkey" def
+[ _oneof _skip ] "_tok" def
 
 # whitespaces / comments
-[ " \t\n" _oneof ] "skip1" 0 defrule
+[ _wschar ] "skip1" 0 defrule
 [ "#"  _oneof _lineskip ] "skip1" 0 defrule
 [ "\n" ppnotof zap _lineskip ] "lineskip" 0 defrule
 [ "\n" _oneof ] "lineskip" 0 defrule
@@ -33,15 +34,15 @@
 [ "symbolchar1" invoke "symbol1" invoke cons ] "symbol1" 0 defrule
 
 # composition of functions
-[ [] ] "comp" 0 defrule
-[ _func "comp" invoke cat ] "comp" 0 defrule
+[ [] ] "prog" 0 defrule
+[ _func "prog" invoke cat ] "prog" 0 defrule
 
 # function
-[ "func1" invoke _skip ] "func" 0 defrule
-[ _symbol promote ] "func1" 0 defrule
-[ _int qot ] "func1" 0 defrule
-[ "quot" invoke ] "func1" 0 defrule
-[ _string qot ] "func1" 0 defrule
+[ "atom" invoke _skip ] "func" 0 defrule
+[ _symbol promote ] "atom" 0 defrule
+[ _int qot ] "atom" 0 defrule
+[ "quot" invoke ] "atom" 0 defrule
+[ _string qot ] "atom" 0 defrule
 # numbers
 [ "+" _oneof "natural" invoke ] "int" 0 defrule
 [ "-" _oneof "natural" invoke neg ] "int" 0 defrule
@@ -50,7 +51,7 @@
 [ ] "natural1" 0 defrule
 [ 10 mul _digit add "natural1" invoke ] "natural1" 0 defrule
 # quotations
-[ "[" _oneof _skip "comp" invoke "]" _oneof qot ] "quot" 0 defrule
+[ "[" _oneof _skip "prog" invoke "]" _oneof qot ] "quot" 0 defrule
 # strings
 [ "\"" _oneof "stringraw" invoke "\"" _oneof ] "string" 0 defrule
 [ nil ] "stringraw" 0 defrule
@@ -61,8 +62,11 @@
 [ "n" _oneof 10 char ] "escseq" 0 defrule
 [ "\\" _oneof 92 char ] "escseq" 0 defrule
 [ "\"" _oneof 34 char ] "escseq" 0 defrule
-[ "\'" _oneof 29 char ] "escseq" 0 defrule
+[ "\'" _oneof 39 char ] "escseq" 0 defrule
 
+# top-level interpreter
+[] "eeltop" 0 defrule
+[ _func i "eeltop" invoke ] "eeltop" 0 defrule
 
 # .eeel : eel core with extensible grammar
-[ _skip "comp" invoke i ] ".eeel" 0 defrule
+[ _skip "eeltop" invoke ] ".eeel" 0 defrule

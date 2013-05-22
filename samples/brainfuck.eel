@@ -1,32 +1,39 @@
 
-# brainfuck codes
-# $[([({"+",43}),({"-",45}),({"[",91}),({"]",93}),({"<",60}),({">",62}),({".",46})])]$
-
-# brainfuck defs
+# brainfuck instruction definitions
 [ swap [ swap ] [ nil 0 ] unlist [ swap cons ] dip2 ] "bfl" def
 [ [ swap ] dip bfl [ swap ] dip ] "bfr" def
 [ [ eqzero not ] while ] "bfloop" def
-[ nil nil 0 ] "bftape" def
 [ dup char putchar ] "bfwr" def
 [ zap getchar [ ord ] [ 0 ] maybe ] "bfrd" def
+[ nil nil 0 ] "bftape" def
 
 [ [ bftape ] "bfprog" invoke cat [ zap2 zap2 0 ] cat "main" def ] ".bf" 0 defrule
 
+# run brainfuck program
+[ [ nil nil ] dip2 i [ zap2 ] dip ] "bfrun" def
+
+# brainfuck program
 [ "bf" invoke ] "bfprog" 0 defrule
 
-[ [ ord cmp eq ] ppchar ] "ascii" def
-
+# brainfuck instruction stream
 [ [] ] "bf" 1 defrule
 [ "bfi" invoke "bf" invoke cat ] "bf" 1 defrule
 
-
-[ pponeof zap ] "oneof_" def
-
+# brainfuck instructions
 [ "]" ppnotof zap [] ] "bfi" 1 defrule
-[ "+" oneof_ [ inc ] ] "bfi" 1 defrule
-[ "-" oneof_ [ dec ] ] "bfi" 1 defrule
-[ "<" oneof_ [ bfl ] ] "bfi" 1 defrule
-[ ">" oneof_ [ bfr ] ] "bfi" 1 defrule
-[ "." oneof_ [ bfwr ] ] "bfi" 1 defrule
-[ "," oneof_ [ bfrd ] ] "bfi" 1 defrule
-[ "[" oneof_ "bf" invoke "]" oneof_ qot [ bfloop ] cat ] "bfi" 1 defrule
+[ "+" _oneof [ inc ] ] "bfi" 1 defrule
+[ "-" _oneof [ dec ] ] "bfi" 1 defrule
+[ "<" _oneof [ bfl ] ] "bfi" 1 defrule
+[ ">" _oneof [ bfr ] ] "bfi" 1 defrule
+[ "." _oneof [ bfwr ] ] "bfi" 1 defrule
+[ "," _oneof [ bfrd ] ] "bfi" 1 defrule
+[ "[" _oneof "bf" invoke "]" _oneof qot [ bfloop ] cat ] "bfi" 1 defrule
+
+# extend eel functions with brainfuck syntax
+[
+    "$bf[" _keyword
+    "bf" invoke
+    qot [bfrun] cat
+    "]" _keyword
+    "skip" invoke
+] "func" 1 defrule

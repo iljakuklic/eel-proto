@@ -145,6 +145,8 @@
 # head, tail
 [ listu [ geta ] smap ] "head" def
 [ listu [ getb ] smap ] "tail" def
+# drop head
+[ tail nil default ] "drophead" def
 # left-associative list catamorphism
 [ [ flip ] dip swap [ dig3 [ [ bury [ keep ] dip ] dip swap [ bury ] dip i ] [ zap2 ] unlist ] fix ] "fold" def
 # list reversal
@@ -175,7 +177,10 @@
 [ [ zipp ] dip [ unpair ] tac lmap ] "zip" def
 # monadic list binding
 [ lmap concat ] "lbind" def
-
+# add element to list if both exist
+[ swap [ swap [ cons just ] [ zap nothing ] maybe ] [ zap nothing ] maybe ] "consmaybe" def
+# traverse list of maybes, turning it to maybe a list
+[ [ consmaybe ] nil just fold [ reverse ] smap ] "travlist" def
 
 # special folds
 [ [ add ] 0 fold ] "sum" def
@@ -249,3 +254,11 @@
 
 # I/O
 [ [ putchar unit ] lmap zap ] "putstr" def
+[ putstr "\n" putstr ] "putstrln" def
+
+# useful parsers
+[ "0123456789" pponeof ord 48 sub ] "_digit" def
+[ pponeof zap ] "_oneof" def
+[ " \t\n" _oneof ] "_wschar" def  # whitespace chars
+[ [ lunit _oneof unit ] lmap zap ] "_keyword" def
+
